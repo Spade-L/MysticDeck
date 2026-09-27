@@ -1,0 +1,1 @@
+coinLoaded=true coinPlay=true cardLoaded=true cardPlay=true bgmLoaded=true bgmPlay=true

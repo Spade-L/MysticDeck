@@ -1,0 +1,5 @@
+normal+3 count=2
+after flip: +3=0 -3=2
+place(-3) ok=true op=sub value=3 eval=-3
+after toggle op=add eval=3
+remove ok=true restored -3=2 +3=0
