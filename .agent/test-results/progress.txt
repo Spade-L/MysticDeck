@@ -1,0 +1,7 @@
+1 init coins=23 currency=0
+2 after consume 3 = 20
+3 after startLevel(2) coins=23 level=2
+4 reward +70 coins=24 stateCurrency=70
+5 after startLevel(3) coins=24 currency=70
+6 after spending all = 0
+7 after startLevel(4) coins=23 distinctTypes=9

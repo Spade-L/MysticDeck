@@ -2,26 +2,28 @@
 
 ### Current Goal
 
-按用户要求重做《灵术牌》UI 交互：加回硬币拖拽、放大数字与硬币（电脑屏幕上看得清），并修复"硬币点击没反应"。
+按用户要求把《灵术牌》美术改成"古典华丽、暗沉金属色"，最新一轮具体要求：**背景加纹样（不要太空）、整体色调改为紫色、硬币高光透明度降到 10%**。
 
 ### Recent Progress
 
-- 已完成：场上卡牌 9→3（`FIELD_CARD_COUNT=3`、`CARD_ROWS=1`）；卡牌加长（`CARD_H` 220→300）；硬币槽放大（组 200×70→216×128、硬币半径 17→26、命中区 40→68）。
-- 交互重构：移除 `touchLayer` 手写命中，改为**节点原生触摸事件**（按钮/卡牌/硬币芯片各自 `touchEnabled` + 事件）。卡牌点击已由用户确认可用。
-- 诊断：`showDebug` 调试框截图确认硬币/卡牌命中框与视觉对齐（排除"错位"）；独立测试入口 `test-nested.ts` 验证嵌套未设尺寸父节点的世界坐标正确（center=110,220）。
-- 本轮（进行中）：把硬币芯片与已放置硬币芯片改为**所属层直接子节点 + 绝对坐标**（与可用卡牌命中节点同构），并加回拖拽（`onTapBegan/Moved/Ended`，落点用 `node.convertToWorldSpace(t.location)`），放大卡牌目标数字 52→72、硬币半径 21→26、芯片文字 15→18、命中区 52→68；关闭 `showDebug`。已提交 5 处编辑（checkpoint 16），**尚未 build**。
+- 交互已定稿并修复：硬币"点了没反应"= TS→Lua 循环变量共享导致闭包读到最终 `i`（`stacks[i+1]` 为 nil 抛错），已用每轮新建 `const stack`/`const idx` 修复；拖拽"拖一小段就自动释放"= Dora tap 手势在指针移出节点即 `onTapEnded`，已用 `updater` 每帧轮询 `Mouse.leftButtonPressed`/`Mouse.position` 续接修复。
+- 交互规则：只能拖拽放置；硬币槽点击=正负互换（`flipCoinSign`）；卡牌上硬币点击=切换运算符（`togglePlacedCoin`）；拖到空白=移除（归还保留符号）。数据层已用无头测试验证（`normal+3 count=2` / `after flip: +3=0 -3=2` / `place(-3) op=sub value=3 eval=-3` / `after toggle op=add eval=3` / `remove restored -3=2`）。
+- 音效：`fetch_url` 损坏无法下载 freesound 文件；改用引擎合成器生成 `Audio/coin.wav`（硬币放置）与 `Audio/card_paper.wav`（卡牌确认消除），真实入口验证 `coinLoaded=true coinPlay=true cardLoaded=true cardPlay=true`。用户反馈卡牌音效"太尖锐"，已降八度（C5/G5→C4/G4）+ 降力度 + 加混响重新生成。
+- 美术：项目无位图素材、无图像生成工具，全部 `DrawNode` 矢量绘制。已完成第一版"暗棕青铜+金色描边"风格（新增 `drawGrad`/`drawBand`/`drawStud`/`drawCorners`/`drawSheen`，`coinColor` 改低饱和金属色，面板/卡牌/按钮加渐变+双金边+角饰+高光，硬币改金属币）。视觉检查：色调统一、无突兀彩色，但"华丽感"有限（高光偏弱、底部小字勉强可读、大面积留白）。
+- 本轮（进行中）：已提交 9 处编辑（checkpoint 55）——调色板整体改**紫色系**（深紫罗兰底 + 淡紫银描边 + 淡紫白文字，`C_GOLD*` 变紫罗兰金属）、`drawSheen` 高光改淡紫白、硬币高光 alpha 170→26（10%）、卡牌/硬币分组渐变改紫、弹窗按钮蓝色/红色改紫系。**尚未提交 `buildStatic` 的背景斜向菱格暗纹 + 顶部装饰带 + 面板渐变改紫 + 按钮渐变/文字改紫**。
 
 ### Open Issues
 
-- 硬币点击"没反应"的根因未 100% 确认（疑为需先选卡牌 + 提示太小 + 缺拖拽）。
-- 拖拽落点坐标换算（`convertToWorldSpace(t.location)`）未经实机验证。
 - 触摸/拖拽真实手感无法在无头环境验证，需用户实机确认。
+- 纯矢量绘制难以做到真正"雕花华丽"；若要材质/纹理需用户提供 PNG/SVG 素材。
+- `game/GameUI.ts` 仍保留有界 `[ui]` 调试打印（BEGIN/MOVE/END/FLIP），待用户确认后清理。
+- 硬币类型色仍为低饱和金属色（金/铜/钢蓝/紫/绿等），在紫色界面下可能偏跳（用户未要求改）。
 
 ### Active Checkpoint
 
-- 当前目标：完成"加回拖拽 + 放大数字/硬币"的改动并验证。
-- 已完成：`game/GameUI.ts` 已提交 5 处编辑（import 加回 `Touch`；新增 `drag`/`dragGhost`/`dragStart`/`cardRects` 字段；`renderHud` 提示文案放大；`renderCards` 重置 `cardRects`；`buildCard` 重写为放大数字 + 已放置硬币芯片挂 cardLayer 绝对坐标并绑定拖拽事件）。**注意：`buildCoinGroup` 重写、`renderCoins` 尺寸/行列、`buildStatic` 底部面板、底部信息 y、以及新增拖拽辅助方法（`touchWorld`/`beginDrag`/`moveDrag`/`endDrag`/`cardAtPoint`/`makeGhost`/`hideGhost`）尚未提交**。
-- 待办：删除临时文件 `test-nested.ts`。
-- 最新验证结果：上一次 `build` 通过（4/4 文件），但那是本轮编辑之前的状态；本轮编辑后尚未 build。
-- 已读/已改文件：`game/GameUI.ts`（已改）、`game/GameDataManager.ts`（已改 FIELD_CARD_COUNT）、`test-nested.ts`（临时，待删）。
-- **Next tool**: `edit_file`（继续提交 `buildCoinGroup`/`renderCoins`/`buildStatic`/底部信息/拖拽辅助方法的编辑），随后 `build`。
+- 当前目标：完成"背景加纹样 + 整体改紫 + 硬币高光 10%"三项改动并验证。
+- 已完成：`game/GameUI.ts` 已提交 9 处编辑（checkpoint 55）：紫色调色板、`drawSheen` 淡紫白、硬币高光 alpha=26、`buildCard` 渐变改紫、`buildCoinGroup` 渐变改紫、4 处弹窗按钮颜色改紫。
+- 待提交：`buildStatic` 重写——背景加斜向菱格暗纹（`for (let i=-10;i<=26;i++)` 双向 `drawSegment`，颜色 `Color(46,36,66,255)`）、顶部 y=620 装饰带、两个面板渐变改紫 `[54,41,74,255]→[24,18,34,255]`、面板内框线、按钮渐变改紫（确定 `[186,158,232]→[116,90,156]` 深紫文字；结束回合 `[130,104,170]→[74,55,100]` 淡紫白文字）。
+- 最新验证结果：上一次 `build` 通过（6/6），但那是本轮 9 处编辑之前的状态；本轮编辑后尚未 build。
+- 已读/已改文件：`game/GameUI.ts`（已改）、`game/GameDataManager.ts`（已改）、`Music/CoinSfx.ts`、`Music/CardSfx.ts`、`Audio/coin.wav`、`Audio/card_paper.wav`。
+- **Next tool**: `edit_file`（提交 `buildStatic` 的背景暗纹 + 顶部装饰 + 面板/按钮紫色渐变），随后 `build`，再 `previewGame` + `analyze_image` 验证。

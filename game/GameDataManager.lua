@@ -10,761 +10,1089 @@ local coinTypeName = ____types.coinTypeName -- 11
 ____exports.GameDataManager = __TS__Class() -- 14
 local GameDataManager = ____exports.GameDataManager -- 14
 GameDataManager.name = "GameDataManager" -- 14
-function GameDataManager.prototype.____constructor(self) -- 38
-	self.highestLevel = 1 -- 30
-	self.currency = 0 -- 31
-	self.inventory = {} -- 32
-	self.metaMaxHp = ____exports.GameDataManager.START_HP -- 33
-	self.deleteCredits = 3 -- 34
-	self.state = self:createEmptyState() -- 39
-	self:startLevel(1) -- 40
-end -- 38
-function GameDataManager.prototype.createEmptyState(self) -- 44
-	return { -- 45
-		hp = ____exports.GameDataManager.START_HP, -- 46
-		maxHp = ____exports.GameDataManager.START_HP, -- 47
-		level = 1, -- 48
-		highestLevel = 1, -- 49
-		turn = 0, -- 50
-		targetCount = 3, -- 51
-		eliminatedCount = 0, -- 52
-		currency = 0, -- 53
-		cards = {}, -- 54
-		inventory = {}, -- 55
-		nextCardId = 1, -- 56
-		status = "playing" -- 57
-	} -- 57
-end -- 44
-function GameDataManager.prototype.unlockLevel(self, level) -- 62
-	local lvl = level -- 63
-	if lvl < 1 then -- 63
-		lvl = 1 -- 64
-	end -- 64
-	if lvl > ____exports.GameDataManager.MAX_LEVEL then -- 64
-		lvl = ____exports.GameDataManager.MAX_LEVEL -- 65
-	end -- 65
-	if lvl > self.highestLevel then -- 65
-		self.highestLevel = lvl -- 67
-		self.state.highestLevel = lvl -- 68
-	end -- 68
+function GameDataManager.prototype.____constructor(self) -- 56
+	self.highestLevel = 1 -- 43
+	self.currency = 0 -- 44
+	self.metaMaxHp = ____exports.GameDataManager.START_HP -- 45
+	self.reserve = {} -- 47
+	self.boughtBase = { -- 49
+		0, -- 49
+		0, -- 49
+		0, -- 49
+		0, -- 49
+		0, -- 49
+		0 -- 49
+	} -- 49
+	self.skillsSeeded = false -- 51
+	self.deleteCredits = 3 -- 52
+	self.state = self:createEmptyState() -- 57
+	self:startLevel(1) -- 58
+end -- 56
+function GameDataManager.prototype.createEmptyState(self) -- 62
+	return { -- 63
+		hp = ____exports.GameDataManager.START_HP, -- 64
+		maxHp = ____exports.GameDataManager.START_HP, -- 65
+		level = 1, -- 66
+		highestLevel = 1, -- 67
+		turn = 0, -- 68
+		targetCount = 3, -- 69
+		eliminatedCount = 0, -- 70
+		currency = 0, -- 71
+		cards = {}, -- 72
+		inventory = {}, -- 73
+		nextCardId = 1, -- 74
+		status = "playing" -- 75
+	} -- 75
 end -- 62
-function GameDataManager.prototype.startLevel(self, level) -- 73
-	local lvl = level -- 74
-	if lvl < 1 then -- 74
-		lvl = 1 -- 75
-	end -- 75
-	if lvl > ____exports.GameDataManager.MAX_LEVEL then -- 75
-		lvl = ____exports.GameDataManager.MAX_LEVEL -- 76
-	end -- 76
-	if lvl > self.highestLevel then -- 76
-		self.highestLevel = lvl -- 77
-	end -- 77
-	if #self.inventory == 0 then -- 77
-		self.inventory = self:buildStartingInventory() -- 78
-	end -- 78
-	self.state = self:createEmptyState() -- 80
-	self.state.level = lvl -- 81
-	self.state.highestLevel = self.highestLevel -- 82
-	self.state.currency = self.currency -- 83
-	self.state.inventory = self.inventory -- 84
-	self.state.maxHp = self.metaMaxHp -- 85
-	self.state.hp = self.metaMaxHp -- 86
-	self.state.targetCount = ____exports.GameDataManager:levelTarget(lvl) -- 87
-	self:dealInitialCards() -- 88
-end -- 73
-function GameDataManager.levelTarget(self, level) -- 92
-	local lvl = level -- 93
-	if lvl < 1 then -- 93
-		lvl = 1 -- 94
+function GameDataManager.prototype.unlockLevel(self, level) -- 80
+	local lvl = level -- 81
+	if lvl < 1 then -- 81
+		lvl = 1 -- 82
+	end -- 82
+	if lvl > ____exports.GameDataManager.MAX_LEVEL then -- 82
+		lvl = ____exports.GameDataManager.MAX_LEVEL -- 83
+	end -- 83
+	if lvl > self.highestLevel then -- 83
+		self.highestLevel = lvl -- 85
+		self.state.highestLevel = lvl -- 86
+	end -- 86
+end -- 80
+function GameDataManager.prototype.startLevel(self, level) -- 91
+	local lvl = level -- 92
+	if lvl < 1 then -- 92
+		lvl = 1 -- 93
+	end -- 93
+	if lvl > ____exports.GameDataManager.MAX_LEVEL then -- 93
+		lvl = ____exports.GameDataManager.MAX_LEVEL -- 94
 	end -- 94
-	if lvl > ____exports.GameDataManager.MAX_LEVEL then -- 94
-		lvl = ____exports.GameDataManager.MAX_LEVEL -- 95
+	if lvl > self.highestLevel then -- 94
+		self.highestLevel = lvl -- 95
 	end -- 95
-	return 3 + math.floor((lvl - 1) * 17 / 14) -- 96
-end -- 92
-function GameDataManager.prototype.buildStartingInventory(self) -- 100
-	local inv = {} -- 101
-	self:addToStack(inv, CoinType.Normal, 1, 4) -- 102
-	self:addToStack(inv, CoinType.Normal, 2, 3) -- 103
-	self:addToStack(inv, CoinType.Normal, 3, 2) -- 104
-	self:addToStack(inv, CoinType.Normal, 5, 2) -- 105
-	self:addToStack(inv, CoinType.Normal, 10, 1) -- 106
-	self:addToStack(inv, CoinType.Multiply, 2, 2) -- 107
-	self:addToStack(inv, CoinType.Multiply, 3, 1) -- 108
-	self:addToStack(inv, CoinType.Freeze, 1, 1) -- 109
-	self:addToStack(inv, CoinType.Discount, 20, 1) -- 110
-	self:addToStack(inv, CoinType.Copy, 1, 1) -- 111
-	self:addToStack(inv, CoinType.Wild, 1, 1) -- 112
-	self:addToStack(inv, CoinType.Growth, 1, 1) -- 113
-	self:addToStack(inv, CoinType.Heal, 1, 2) -- 114
-	self:addToStack(inv, CoinType.Disturb, 7, 1) -- 115
-	return inv -- 116
-end -- 100
-function GameDataManager.prototype.addToStack(self, inv, ____type, value, count) -- 120
-	do -- 120
-		local i = 0 -- 121
-		while i < #inv do -- 121
-			local s = inv[i + 1] -- 122
-			if s.type == ____type and s.value == value then -- 122
-				s.count = s.count + count -- 124
-				return -- 125
-			end -- 125
-			i = i + 1 -- 121
-		end -- 121
-	end -- 121
-	inv[#inv + 1] = {type = ____type, value = value, count = count} -- 128
-end -- 120
-function GameDataManager.prototype.addCoin(self, ____type, value, count) -- 132
-	self:addToStack(self.state.inventory, ____type, value, count) -- 133
-end -- 132
-function GameDataManager.prototype.flipCoinSign(self, ____type, value) -- 137
-	local inv = self.state.inventory -- 138
-	do -- 138
-		local i = 0 -- 139
-		while i < #inv do -- 139
-			local s = inv[i + 1] -- 140
-			if s.type == ____type and s.value == value then -- 140
-				local count = s.count -- 142
-				__TS__ArraySplice(inv, i, 1) -- 143
-				self:addToStack(inv, ____type, -value, count) -- 144
-				return -- 145
-			end -- 145
-			i = i + 1 -- 139
-		end -- 139
-	end -- 139
-end -- 137
-function GameDataManager.prototype.consumeCoin(self, ____type, value, count) -- 151
-	local inv = self.state.inventory -- 152
-	do -- 152
-		local i = 0 -- 153
-		while i < #inv do -- 153
-			local s = inv[i + 1] -- 154
-			if s.type == ____type and s.value == value then -- 154
-				if s.count < count then -- 154
-					return false -- 156
-				end -- 156
-				s.count = s.count - count -- 157
-				if s.count <= 0 then -- 157
-					__TS__ArraySplice(inv, i, 1) -- 158
-				end -- 158
-				return true -- 159
-			end -- 159
-			i = i + 1 -- 153
-		end -- 153
-	end -- 153
-	return false -- 162
-end -- 151
-function GameDataManager.prototype.stackCount(self, ____type, value) -- 166
-	local inv = self.state.inventory -- 167
-	do -- 167
-		local i = 0 -- 168
-		while i < #inv do -- 168
-			local s = inv[i + 1] -- 169
-			if s.type == ____type and s.value == value then -- 169
-				return s.count -- 170
-			end -- 170
-			i = i + 1 -- 168
-		end -- 168
-	end -- 168
-	return 0 -- 172
-end -- 166
-function GameDataManager.prototype.coinTotal(self) -- 176
-	local n = 0 -- 177
-	local inv = self.state.inventory -- 178
-	do -- 178
-		local i = 0 -- 179
-		while i < #inv do -- 179
-			n = n + inv[i + 1].count -- 179
-			i = i + 1 -- 179
-		end -- 179
-	end -- 179
-	return n -- 180
-end -- 176
-function GameDataManager.prototype.distinctTypeCount(self) -- 184
-	local seen = {} -- 185
-	local inv = self.state.inventory -- 186
-	do -- 186
-		local i = 0 -- 187
-		while i < #inv do -- 187
-			local t = inv[i + 1].type -- 188
-			local found = false -- 189
-			do -- 189
-				local j = 0 -- 190
-				while j < #seen do -- 190
-					if seen[j + 1] == t then -- 190
-						found = true -- 191
-						break -- 191
-					end -- 191
-					j = j + 1 -- 190
-				end -- 190
-			end -- 190
-			if not found then -- 190
-				seen[#seen + 1] = t -- 193
-			end -- 193
-			i = i + 1 -- 187
-		end -- 187
-	end -- 187
-	return #seen -- 195
-end -- 184
-function GameDataManager.prototype.typeNameList(self) -- 199
-	local names = {} -- 200
-	local inv = self.state.inventory -- 201
-	do -- 201
-		local i = 0 -- 202
-		while i < #inv do -- 202
-			local name = coinTypeName(inv[i + 1].type) -- 203
-			local found = false -- 204
-			do -- 204
-				local j = 0 -- 205
-				while j < #names do -- 205
-					if names[j + 1] == name then -- 205
-						found = true -- 206
-						break -- 206
-					end -- 206
-					j = j + 1 -- 205
-				end -- 205
-			end -- 205
-			if not found then -- 205
-				names[#names + 1] = name -- 208
-			end -- 208
-			i = i + 1 -- 202
-		end -- 202
-	end -- 202
-	local out = "" -- 210
-	do -- 210
-		local i = 0 -- 211
-		while i < #names do -- 211
-			if i > 0 then -- 211
-				out = out .. "/" -- 212
-			end -- 212
-			out = out .. names[i + 1] -- 213
-			i = i + 1 -- 211
-		end -- 211
-	end -- 211
-	return out -- 215
+	local extra = self:extraCoins() -- 98
+	self.state = self:createEmptyState() -- 99
+	self.state.level = lvl -- 100
+	self.state.highestLevel = self.highestLevel -- 101
+	self.state.currency = self.currency -- 102
+	self:resetCoinCycle(extra) -- 104
+	self.state.maxHp = self.metaMaxHp -- 105
+	self.state.hp = self.metaMaxHp -- 106
+	self.state.targetCount = ____exports.GameDataManager:levelTarget(lvl) -- 107
+	self:dealInitialCards() -- 108
+end -- 91
+function GameDataManager.prototype.buildBaseCoins(self) -- 114
+	local list = {} -- 115
+	list[#list + 1] = {type = CoinType.Normal, value = 1, count = 4} -- 116
+	list[#list + 1] = {type = CoinType.Normal, value = 2, count = 3} -- 117
+	list[#list + 1] = {type = CoinType.Normal, value = 3, count = 2} -- 118
+	list[#list + 1] = {type = CoinType.Normal, value = 5, count = 2} -- 119
+	list[#list + 1] = {type = CoinType.Normal, value = 10, count = 1} -- 120
+	return list -- 121
+end -- 114
+function GameDataManager.prototype.buildSkillCoins(self) -- 125
+	local list = {} -- 126
+	list[#list + 1] = {type = CoinType.Multiply, value = 2, count = 2} -- 127
+	list[#list + 1] = {type = CoinType.Multiply, value = 3, count = 1} -- 128
+	list[#list + 1] = {type = CoinType.Freeze, value = 1, count = 1} -- 129
+	list[#list + 1] = {type = CoinType.Discount, value = 20, count = 1} -- 130
+	list[#list + 1] = {type = CoinType.Copy, value = 1, count = 1} -- 131
+	list[#list + 1] = {type = CoinType.Wild, value = 1, count = 1} -- 132
+	list[#list + 1] = {type = CoinType.Growth, value = 1, count = 1} -- 133
+	list[#list + 1] = {type = CoinType.Heal, value = 1, count = 2} -- 134
+	list[#list + 1] = {type = CoinType.Disturb, value = 7, count = 1} -- 135
+	return list -- 136
+end -- 125
+function GameDataManager.prototype.expandCoins(self, list) -- 140
+	local out = {} -- 141
+	do -- 141
+		local i = 0 -- 142
+		while i < #list do -- 142
+			local s = list[i + 1] -- 143
+			do -- 143
+				local k = 0 -- 144
+				while k < s.count do -- 144
+					out[#out + 1] = {type = s.type, value = s.value, count = 1} -- 144
+					k = k + 1 -- 144
+				end -- 144
+			end -- 144
+			i = i + 1 -- 142
+		end -- 142
+	end -- 142
+	return out -- 146
+end -- 140
+function GameDataManager.prototype.shuffleCoins(self, list) -- 150
+	do -- 150
+		local i = #list - 1 -- 151
+		while i > 0 do -- 151
+			local j = self:randomInt(0, i) -- 152
+			local tmp = list[i + 1] -- 153
+			list[i + 1] = list[j + 1] -- 154
+			list[j + 1] = tmp -- 155
+			i = i - 1 -- 151
+		end -- 151
+	end -- 151
+	return list -- 157
+end -- 150
+function GameDataManager.prototype.collectStack(self, out, list) -- 161
+	do -- 161
+		local i = 0 -- 162
+		while i < #list do -- 162
+			local s = list[i + 1] -- 163
+			do -- 163
+				local k = 0 -- 164
+				while k < s.count do -- 164
+					out[#out + 1] = {type = s.type, value = s.value, count = 1} -- 164
+					k = k + 1 -- 164
+				end -- 164
+			end -- 164
+			i = i + 1 -- 162
+		end -- 162
+	end -- 162
+end -- 161
+function GameDataManager.prototype.isBaseCoin(self, ____type, value) -- 169
+	if ____type ~= CoinType.Normal then -- 169
+		return false -- 170
+	end -- 170
+	do -- 170
+		local i = 0 -- 171
+		while i < #____exports.GameDataManager.BASE_VALUES do -- 171
+			if value == ____exports.GameDataManager.BASE_VALUES[i + 1] then -- 171
+				return true -- 172
+			end -- 172
+			i = i + 1 -- 171
+		end -- 171
+	end -- 171
+	return false -- 174
+end -- 169
+function GameDataManager.prototype.buyBaseCoin(self, idx) -- 178
+	if idx < 0 or idx >= #____exports.GameDataManager.BASE_VALUES then -- 178
+		return {ok = false, value = 0, reason = "无效的点数"} -- 180
+	end -- 180
+	if self.currency < ____exports.GameDataManager.BASE_COIN_COST then -- 180
+		return {ok = false, value = 0, reason = "货币不足"} -- 183
+	end -- 183
+	self.currency = self.currency - ____exports.GameDataManager.BASE_COIN_COST -- 185
+	self.state.currency = self.currency -- 186
+	local ____self_boughtBase_0, ____temp_1 = self.boughtBase, idx + 1 -- 186
+	____self_boughtBase_0[____temp_1] = ____self_boughtBase_0[____temp_1] + 1 -- 187
+	return {ok = true, value = ____exports.GameDataManager.BASE_VALUES[idx + 1], reason = ""} -- 188
+end -- 178
+function GameDataManager.prototype.boughtBaseTotal(self) -- 192
+	local n = 0 -- 193
+	do -- 193
+		local i = 0 -- 194
+		while i < #self.boughtBase do -- 194
+			n = n + self.boughtBase[i + 1] -- 194
+			i = i + 1 -- 194
+		end -- 194
+	end -- 194
+	return n -- 195
+end -- 192
+function GameDataManager.prototype.extraCoins(self) -- 199
+	local all = {} -- 200
+	self:collectStack(all, self.state.inventory) -- 201
+	self:collectStack(all, self.reserve) -- 202
+	local out = {} -- 203
+	do -- 203
+		local i = 0 -- 204
+		while i < #all do -- 204
+			local c = all[i + 1] -- 205
+			if not self:isBaseCoin(c.type, c.value) then -- 205
+				out[#out + 1] = {type = c.type, value = c.value, count = 1} -- 206
+			end -- 206
+			i = i + 1 -- 204
+		end -- 204
+	end -- 204
+	return out -- 208
 end -- 199
-function GameDataManager.prototype.randomInt(self, min, max) -- 219
-	return math.floor(math.random() * (max - min + 1)) + min -- 220
-end -- 219
-function GameDataManager.prototype.dealCard(self) -- 224
-	local pool = ____exports.GameDataManager.TARGET_POOL -- 225
-	local target = pool[self:randomInt(0, #pool - 1) + 1] -- 226
-	local card = { -- 227
-		id = self.state.nextCardId, -- 228
-		target = target, -- 229
-		originalTarget = target, -- 230
-		countdown = ____exports.GameDataManager.CARD_COUNTDOWN, -- 231
-		frozen = false, -- 232
-		healAmount = 0, -- 233
-		copyArmed = false, -- 234
-		coins = {}, -- 235
-		eliminated = false, -- 236
-		special = false, -- 237
-		specialType = "" -- 238
-	} -- 238
-	local ____self_state_0, ____nextCardId_1 = self.state, "nextCardId" -- 238
-	____self_state_0[____nextCardId_1] = ____self_state_0[____nextCardId_1] + 1 -- 240
-	local ____self_state_cards_2 = self.state.cards -- 240
-	____self_state_cards_2[#____self_state_cards_2 + 1] = card -- 241
-end -- 224
-function GameDataManager.prototype.dealInitialCards(self) -- 245
-	while #self.state.cards < ____exports.GameDataManager.FIELD_CARD_COUNT do -- 245
-		self:dealCard() -- 247
-	end -- 247
-end -- 245
-function GameDataManager.prototype.findCard(self, cardId) -- 252
-	local cards = self.state.cards -- 253
-	do -- 253
-		local i = 0 -- 254
-		while i < #cards do -- 254
-			if cards[i + 1].id == cardId then -- 254
-				return cards[i + 1] -- 255
-			end -- 255
-			i = i + 1 -- 254
-		end -- 254
-	end -- 254
-	return nil -- 257
-end -- 252
-function GameDataManager.prototype.removeCard(self, cardId) -- 261
-	local cards = self.state.cards -- 262
-	do -- 262
-		local i = 0 -- 263
-		while i < #cards do -- 263
-			if cards[i + 1].id == cardId then -- 263
-				__TS__ArraySplice(cards, i, 1) -- 264
-				return -- 264
-			end -- 264
-			i = i + 1 -- 263
-		end -- 263
-	end -- 263
-end -- 261
-function GameDataManager.prototype.placeCoinOnCard(self, cardId, ____type, value) -- 269
-	local card = self:findCard(cardId) -- 270
-	if not card or card.eliminated then -- 270
-		return false -- 271
-	end -- 271
-	if self:stackCount(____type, value) <= 0 then -- 271
-		return false -- 272
-	end -- 272
-	if ____type == CoinType.Freeze then -- 272
-		card.frozen = true -- 276
-		self:consumeCoin(____type, value, 1) -- 277
-		return true -- 278
-	end -- 278
-	if ____type == CoinType.Discount then -- 278
-		self:applyDiscount(card, value) -- 281
-		self:consumeCoin(____type, value, 1) -- 282
-		return true -- 283
+function GameDataManager.prototype.resetCoinCycle(self, extra) -- 213
+	local pool = {} -- 214
+	local base = self:expandCoins(self:buildBaseCoins()) -- 215
+	do -- 215
+		local i = 0 -- 216
+		while i < #base do -- 216
+			pool[#pool + 1] = base[i + 1] -- 216
+			i = i + 1 -- 216
+		end -- 216
+	end -- 216
+	do -- 216
+		local i = 0 -- 218
+		while i < #____exports.GameDataManager.BASE_VALUES do -- 218
+			do -- 218
+				local k = 0 -- 219
+				while k < self.boughtBase[i + 1] do -- 219
+					pool[#pool + 1] = {type = CoinType.Normal, value = ____exports.GameDataManager.BASE_VALUES[i + 1], count = 1} -- 220
+					k = k + 1 -- 219
+				end -- 219
+			end -- 219
+			i = i + 1 -- 218
+		end -- 218
+	end -- 218
+	if not self.skillsSeeded then -- 218
+		self.skillsSeeded = true -- 226
+		local skills = self:expandCoins(self:buildSkillCoins()) -- 227
+		do -- 227
+			local i = 0 -- 228
+			while i < #skills do -- 228
+				pool[#pool + 1] = skills[i + 1] -- 228
+				i = i + 1 -- 228
+			end -- 228
+		end -- 228
+	end -- 228
+	local extraList = self:expandCoins(extra) -- 230
+	do -- 230
+		local i = 0 -- 231
+		while i < #extraList do -- 231
+			pool[#pool + 1] = extraList[i + 1] -- 231
+			i = i + 1 -- 231
+		end -- 231
+	end -- 231
+	self:shuffleCoins(pool) -- 233
+	local hand = {} -- 235
+	local handCount = 0 -- 236
+	while handCount < ____exports.GameDataManager.HAND_SIZE and #pool > 0 do -- 236
+		local c = __TS__ArraySplice(pool, 0, 1)[1] -- 238
+		self:addToStack(hand, c.type, c.value, c.count) -- 239
+		handCount = handCount + 1 -- 240
+	end -- 240
+	self.state.inventory = hand -- 242
+	self.reserve = pool -- 243
+end -- 213
+function GameDataManager.prototype.drawFromReserve(self) -- 247
+	if #self.reserve == 0 then -- 247
+		return -- 248
+	end -- 248
+	local c = __TS__ArraySplice(self.reserve, 0, 1)[1] -- 249
+	self:addToStack(self.state.inventory, c.type, c.value, c.count) -- 250
+end -- 247
+function GameDataManager.levelTarget(self, level) -- 254
+	local lvl = level -- 255
+	if lvl < 1 then -- 255
+		lvl = 1 -- 256
+	end -- 256
+	if lvl > ____exports.GameDataManager.MAX_LEVEL then -- 256
+		lvl = ____exports.GameDataManager.MAX_LEVEL -- 257
+	end -- 257
+	return 3 + math.floor((lvl - 1) * 17 / 14) -- 258
+end -- 254
+function GameDataManager.prototype.buildStartingInventory(self) -- 262
+	local inv = {} -- 263
+	self:addToStack(inv, CoinType.Normal, 1, 4) -- 264
+	self:addToStack(inv, CoinType.Normal, 2, 3) -- 265
+	self:addToStack(inv, CoinType.Normal, 3, 2) -- 266
+	self:addToStack(inv, CoinType.Normal, 5, 2) -- 267
+	self:addToStack(inv, CoinType.Normal, 10, 1) -- 268
+	self:addToStack(inv, CoinType.Multiply, 2, 2) -- 269
+	self:addToStack(inv, CoinType.Multiply, 3, 1) -- 270
+	self:addToStack(inv, CoinType.Freeze, 1, 1) -- 271
+	self:addToStack(inv, CoinType.Discount, 20, 1) -- 272
+	self:addToStack(inv, CoinType.Copy, 1, 1) -- 273
+	self:addToStack(inv, CoinType.Wild, 1, 1) -- 274
+	self:addToStack(inv, CoinType.Growth, 1, 1) -- 275
+	self:addToStack(inv, CoinType.Heal, 1, 2) -- 276
+	self:addToStack(inv, CoinType.Disturb, 7, 1) -- 277
+	return inv -- 278
+end -- 262
+function GameDataManager.prototype.addToStack(self, inv, ____type, value, count) -- 282
+	do -- 282
+		local i = 0 -- 283
+		while i < #inv do -- 283
+			local s = inv[i + 1] -- 284
+			if s.type == ____type and s.value == value then -- 284
+				s.count = s.count + count -- 286
+				return -- 287
+			end -- 287
+			i = i + 1 -- 283
+		end -- 283
 	end -- 283
-	if ____type == CoinType.Heal then -- 283
-		card.healAmount = card.healAmount + value -- 286
-		self:consumeCoin(____type, value, 1) -- 287
-		return true -- 288
-	end -- 288
-	if ____type == CoinType.Copy then -- 288
-		card.copyArmed = true -- 291
-		self:consumeCoin(____type, value, 1) -- 292
-		return true -- 293
-	end -- 293
-	if ____type == CoinType.Wild then -- 293
-		self:consumeCoin(____type, value, 1) -- 296
-		self:eliminateCard(card) -- 297
-		return true -- 298
-	end -- 298
-	local negative = value < 0 -- 303
-	local op = "add" -- 304
-	if ____type == CoinType.Multiply then -- 304
-		op = negative and "div" or "mul" -- 305
-	elseif negative then -- 305
-		op = "sub" -- 306
-	end -- 306
-	local placed = { -- 307
-		type = ____type, -- 307
-		value = math.abs(value), -- 307
-		op = op -- 307
-	} -- 307
-	local ____card_coins_3 = card.coins -- 307
-	____card_coins_3[#____card_coins_3 + 1] = placed -- 308
-	self:consumeCoin(____type, value, 1) -- 309
-	return true -- 310
-end -- 269
-function GameDataManager.prototype.applyDiscount(self, card, percent) -- 314
-	local p = percent -- 315
-	if p < 0 then -- 315
-		p = 0 -- 316
-	end -- 316
-	if p > ____exports.GameDataManager.DISCOUNT_MAX then -- 316
-		p = ____exports.GameDataManager.DISCOUNT_MAX -- 317
+	inv[#inv + 1] = {type = ____type, value = value, count = count} -- 290
+end -- 282
+function GameDataManager.prototype.addCoin(self, ____type, value, count) -- 294
+	self:addToStack(self.state.inventory, ____type, value, count) -- 295
+end -- 294
+function GameDataManager.prototype.flipCoinSign(self, ____type, value) -- 299
+	local inv = self.state.inventory -- 300
+	do -- 300
+		local i = 0 -- 301
+		while i < #inv do -- 301
+			local s = inv[i + 1] -- 302
+			if s.type == ____type and s.value == value then -- 302
+				local count = s.count -- 304
+				__TS__ArraySplice(inv, i, 1) -- 305
+				self:addToStack(inv, ____type, -value, count) -- 306
+				return -- 307
+			end -- 307
+			i = i + 1 -- 301
+		end -- 301
+	end -- 301
+end -- 299
+function GameDataManager.prototype.consumeCoin(self, ____type, value, count) -- 315
+	local inv = self.state.inventory -- 316
+	do -- 316
+		local i = 0 -- 317
+		while i < #inv do -- 317
+			local s = inv[i + 1] -- 318
+			if s.type == ____type and s.value == value then -- 318
+				if s.count < count then -- 318
+					return false -- 320
+				end -- 320
+				s.count = s.count - count -- 321
+				if s.count <= 0 then -- 321
+					__TS__ArraySplice(inv, i, 1) -- 322
+				end -- 322
+				do -- 322
+					local k = 0 -- 323
+					while k < count do -- 323
+						local ____self_reserve_2 = self.reserve -- 323
+						____self_reserve_2[#____self_reserve_2 + 1] = {type = ____type, value = value, count = 1} -- 324
+						k = k + 1 -- 323
+					end -- 323
+				end -- 323
+				return true -- 326
+			end -- 326
+			i = i + 1 -- 317
+		end -- 317
 	end -- 317
-	card.target = math.max( -- 318
-		1, -- 318
-		math.floor(card.target * (100 - p) / 100 + 0.5) -- 318
-	) -- 318
-end -- 314
-function GameDataManager.prototype.togglePlacedCoin(self, cardId, index) -- 322
-	local card = self:findCard(cardId) -- 323
-	if not card or index < 0 or index >= #card.coins then -- 323
-		return -- 324
-	end -- 324
-	local c = card.coins[index + 1] -- 325
-	if c.type == CoinType.Multiply then -- 325
-		c.op = c.op == "mul" and "div" or "mul" -- 327
-	else -- 327
-		c.op = c.op == "sub" and "add" or "sub" -- 329
-	end -- 329
-end -- 322
-function GameDataManager.prototype.removePlacedCoin(self, cardId, index) -- 334
-	local card = self:findCard(cardId) -- 335
-	if not card or index < 0 or index >= #card.coins then -- 335
-		return false -- 336
+	return false -- 329
+end -- 315
+function GameDataManager.prototype.refillHand(self) -- 333
+	local inv = self.state.inventory -- 334
+	local handCount = 0 -- 335
+	do -- 335
+		local i = 0 -- 336
+		while i < #inv do -- 336
+			handCount = handCount + inv[i + 1].count -- 336
+			i = i + 1 -- 336
+		end -- 336
 	end -- 336
-	local c = card.coins[index + 1] -- 337
-	__TS__ArraySplice(card.coins, index, 1) -- 338
-	local sign = (c.op == "sub" or c.op == "div") and -1 or 1 -- 340
-	self:addCoin(c.type, c.value * sign, 1) -- 341
-	return true -- 342
-end -- 334
-function GameDataManager.prototype.movePlacedCoin(self, fromCardId, index, toCardId) -- 346
-	local from = self:findCard(fromCardId) -- 347
-	local to = self:findCard(toCardId) -- 348
-	if not from or not to or from == to or index < 0 or index >= #from.coins then -- 348
-		return false -- 349
-	end -- 349
-	local c = from.coins[index + 1] -- 350
-	__TS__ArraySplice(from.coins, index, 1) -- 351
-	local ____to_coins_4 = to.coins -- 351
-	____to_coins_4[#____to_coins_4 + 1] = c -- 352
-	return true -- 353
-end -- 346
-function GameDataManager.prototype.evaluateCard(self, card) -- 357
-	local total = 0 -- 358
-	do -- 358
-		local i = 0 -- 359
-		while i < #card.coins do -- 359
-			local c = card.coins[i + 1] -- 360
-			if c.type == CoinType.Multiply then -- 360
-				if c.op == "div" then -- 360
-					total = c.value == 0 and total or math.floor(total / c.value) -- 363
-				else -- 363
-					total = total * c.value -- 365
-				end -- 365
-			else -- 365
-				if c.op == "sub" then -- 365
-					total = total - c.value -- 368
-				else -- 368
-					total = total + c.value -- 369
-				end -- 369
-			end -- 369
-			i = i + 1 -- 359
-		end -- 359
-	end -- 359
-	return total -- 372
-end -- 357
-function GameDataManager.prototype.confirmCard(self, cardId) -- 376
-	local result = { -- 377
-		ok = false, -- 378
-		reason = "none", -- 379
-		total = 0, -- 380
-		target = 0, -- 381
-		healGained = 0, -- 382
-		copiedValue = 0 -- 383
-	} -- 383
-	local card = self:findCard(cardId) -- 385
-	if not card then -- 385
-		return result -- 386
-	end -- 386
-	result.target = card.target -- 387
-	if card.eliminated then -- 387
-		result.reason = "eliminated" -- 388
-		return result -- 388
-	end -- 388
-	local total = self:evaluateCard(card) -- 389
-	result.total = total -- 390
-	if #card.coins == 0 then -- 390
-		result.reason = "no_coin" -- 391
-		return result -- 391
-	end -- 391
-	if total ~= card.target then -- 391
-		result.reason = "mismatch" -- 392
-		return result -- 392
-	end -- 392
-	local r = self:eliminateCard(card) -- 393
-	result.ok = true -- 394
-	result.reason = "ok" -- 395
-	result.healGained = r.healGained -- 396
-	result.copiedValue = r.copiedValue -- 397
-	return result -- 398
-end -- 376
-function GameDataManager.prototype.eliminateCard(self, card) -- 402
-	card.eliminated = true -- 403
-	local ____self_state_5, ____eliminatedCount_6 = self.state, "eliminatedCount" -- 403
-	____self_state_5[____eliminatedCount_6] = ____self_state_5[____eliminatedCount_6] + 1 -- 404
-	local healGained = 0 -- 405
-	if card.healAmount > 0 then -- 405
-		healGained = card.healAmount -- 407
-		self.state.hp = math.min(self.state.maxHp, self.state.hp + healGained) -- 408
-	end -- 408
-	local copiedValue = 0 -- 410
-	if card.copyArmed then -- 410
-		copiedValue = card.target -- 412
-		self:addCoin(CoinType.Normal, copiedValue, 1) -- 413
+	while handCount < ____exports.GameDataManager.HAND_SIZE and #self.reserve > 0 do -- 336
+		self:drawFromReserve() -- 338
+		handCount = handCount + 1 -- 339
+	end -- 339
+end -- 333
+function GameDataManager.prototype.stackCount(self, ____type, value) -- 344
+	local inv = self.state.inventory -- 345
+	do -- 345
+		local i = 0 -- 346
+		while i < #inv do -- 346
+			local s = inv[i + 1] -- 347
+			if s.type == ____type and s.value == value then -- 347
+				return s.count -- 348
+			end -- 348
+			i = i + 1 -- 346
+		end -- 346
+	end -- 346
+	return 0 -- 350
+end -- 344
+function GameDataManager.prototype.coinTotal(self) -- 354
+	local n = 0 -- 355
+	local inv = self.state.inventory -- 356
+	do -- 356
+		local i = 0 -- 357
+		while i < #inv do -- 357
+			n = n + inv[i + 1].count -- 357
+			i = i + 1 -- 357
+		end -- 357
+	end -- 357
+	return n -- 358
+end -- 354
+function GameDataManager.prototype.distinctTypeCount(self) -- 362
+	local seen = {} -- 363
+	local inv = self.state.inventory -- 364
+	do -- 364
+		local i = 0 -- 365
+		while i < #inv do -- 365
+			local t = inv[i + 1].type -- 366
+			local found = false -- 367
+			do -- 367
+				local j = 0 -- 368
+				while j < #seen do -- 368
+					if seen[j + 1] == t then -- 368
+						found = true -- 369
+						break -- 369
+					end -- 369
+					j = j + 1 -- 368
+				end -- 368
+			end -- 368
+			if not found then -- 368
+				seen[#seen + 1] = t -- 371
+			end -- 371
+			i = i + 1 -- 365
+		end -- 365
+	end -- 365
+	return #seen -- 373
+end -- 362
+function GameDataManager.prototype.typeNameList(self) -- 377
+	local names = {} -- 378
+	local inv = self.state.inventory -- 379
+	do -- 379
+		local i = 0 -- 380
+		while i < #inv do -- 380
+			local name = coinTypeName(inv[i + 1].type) -- 381
+			local found = false -- 382
+			do -- 382
+				local j = 0 -- 383
+				while j < #names do -- 383
+					if names[j + 1] == name then -- 383
+						found = true -- 384
+						break -- 384
+					end -- 384
+					j = j + 1 -- 383
+				end -- 383
+			end -- 383
+			if not found then -- 383
+				names[#names + 1] = name -- 386
+			end -- 386
+			i = i + 1 -- 380
+		end -- 380
+	end -- 380
+	local out = "" -- 388
+	do -- 388
+		local i = 0 -- 389
+		while i < #names do -- 389
+			if i > 0 then -- 389
+				out = out .. "/" -- 390
+			end -- 390
+			out = out .. names[i + 1] -- 391
+			i = i + 1 -- 389
+		end -- 389
+	end -- 389
+	return out -- 393
+end -- 377
+function GameDataManager.prototype.randomInt(self, min, max) -- 397
+	return math.floor(math.random() * (max - min + 1)) + min -- 398
+end -- 397
+function GameDataManager.prototype.pickTarget(self, level, cards) -- 402
+	local pool -- 403
+	local big -- 404
+	if level >= 12 then -- 404
+		pool = ____exports.GameDataManager.POOL_HIGH -- 406
+		big = 30 -- 407
+	elseif level >= 7 then -- 407
+		pool = ____exports.GameDataManager.POOL_MID -- 409
+		big = 30 -- 410
+	else -- 410
+		pool = ____exports.GameDataManager.POOL_LOW -- 412
+		big = 20 -- 413
 	end -- 413
-	self:removeCard(card.id) -- 415
-	self:dealCard() -- 416
-	self:checkWin() -- 417
-	return {healGained = healGained, copiedValue = copiedValue} -- 418
+	local bigOnField = 0 -- 415
+	do -- 415
+		local i = 0 -- 416
+		while i < #cards do -- 416
+			if cards[i + 1].target >= big then -- 416
+				bigOnField = bigOnField + 1 -- 417
+			end -- 417
+			i = i + 1 -- 416
+		end -- 416
+	end -- 416
+	local useSmall = bigOnField >= 1 -- 419
+	do -- 419
+		local attempt = 0 -- 420
+		while attempt < 12 do -- 420
+			local t = pool[self:randomInt(0, #pool - 1) + 1] -- 421
+			if not useSmall or t < big then -- 421
+				return t -- 422
+			end -- 422
+			attempt = attempt + 1 -- 420
+		end -- 420
+	end -- 420
+	return 3 -- 424
 end -- 402
-function GameDataManager.prototype.endTurn(self) -- 422
-	local ____self_state_7, ____turn_8 = self.state, "turn" -- 422
-	____self_state_7[____turn_8] = ____self_state_7[____turn_8] + 1 -- 423
-	local hpLost = 0 -- 424
-	local expiredCount = 0 -- 425
-	local cards = self.state.cards -- 426
-	do -- 426
-		local i = #cards - 1 -- 429
-		while i >= 0 do -- 429
-			do -- 429
-				local card = cards[i + 1] -- 430
-				if card.frozen then -- 430
-					card.frozen = false -- 431
-					goto __continue108 -- 431
-				end -- 431
-				card.countdown = card.countdown - 1 -- 432
-				if card.countdown <= 0 then -- 432
-					hpLost = hpLost + 1 -- 434
-					expiredCount = expiredCount + 1 -- 435
-					local ____self_state_9, ____hp_10 = self.state, "hp" -- 435
-					____self_state_9[____hp_10] = ____self_state_9[____hp_10] - 1 -- 436
-					__TS__ArraySplice(cards, i, 1) -- 437
-				end -- 437
-			end -- 437
-			::__continue108:: -- 437
-			i = i - 1 -- 429
-		end -- 429
-	end -- 429
-	do -- 429
-		local ci = 0 -- 442
-		while ci < #cards do -- 442
-			local card = cards[ci + 1] -- 443
-			do -- 443
-				local pi = 0 -- 444
-				while pi < #card.coins do -- 444
-					local pc = card.coins[pi + 1] -- 445
-					if pc.type == CoinType.Growth then -- 445
-						pc.value = math.min(____exports.GameDataManager.COIN_MAX_VALUE, pc.value * 2) -- 447
-					end -- 447
-					pi = pi + 1 -- 444
-				end -- 444
-			end -- 444
-			ci = ci + 1 -- 442
-		end -- 442
-	end -- 442
-	local inv = self.state.inventory -- 453
-	do -- 453
-		local i = #inv - 1 -- 454
-		while i >= 0 do -- 454
-			if inv[i + 1].type == CoinType.Disturb then -- 454
-				__TS__ArraySplice(inv, i, 1) -- 455
-			end -- 455
-			i = i - 1 -- 454
-		end -- 454
-	end -- 454
-	while #cards < ____exports.GameDataManager.FIELD_CARD_COUNT do -- 454
-		self:dealCard() -- 459
-	end -- 459
-	local won = false -- 462
-	local lost = false -- 463
-	if self.state.hp <= 0 then -- 463
-		self.state.hp = 0 -- 465
-		self.state.status = "lost" -- 466
-		lost = true -- 467
-	else -- 467
-		self:checkWin() -- 469
-		won = self.state.status == "won" -- 470
-	end -- 470
-	return {hpLost = hpLost, expiredCount = expiredCount, won = won, lost = lost} -- 472
-end -- 422
-function GameDataManager.prototype.checkWin(self) -- 476
-	if self.state.eliminatedCount >= self.state.targetCount and self.state.status == "playing" then -- 476
-		self.state.status = self.state.level >= ____exports.GameDataManager.MAX_LEVEL and "complete" or "won" -- 478
-	end -- 478
-end -- 476
-function GameDataManager.prototype.applyWinRewards(self) -- 483
-	local gain = 50 + self.state.level * 10 -- 484
-	local ____self_state_11, ____currency_12 = self.state, "currency" -- 484
-	____self_state_11[____currency_12] = ____self_state_11[____currency_12] + gain -- 485
-	self.currency = self.state.currency -- 486
-	local r = self:randomRewardCoin() -- 487
-	self:addCoin(r.type, r.value, 1) -- 488
-	return {currency = gain, coinType = r.type, coinValue = r.value} -- 489
-end -- 483
-function GameDataManager.prototype.randomRewardCoin(self) -- 493
-	local r = self:randomInt(1, 100) -- 494
-	if r <= 60 then -- 494
-		return { -- 495
-			type = CoinType.Normal, -- 495
-			value = self:randomInt(1, 10), -- 495
-			count = 1 -- 495
-		} -- 495
-	end -- 495
-	if r <= 80 then -- 495
-		return { -- 496
-			type = CoinType.Multiply, -- 496
-			value = self:randomInt(2, 4), -- 496
-			count = 1 -- 496
-		} -- 496
+function GameDataManager.prototype.dealCard(self) -- 428
+	local target = self:pickTarget(self.state.level, self.state.cards) -- 429
+	local card = { -- 430
+		id = self.state.nextCardId, -- 431
+		target = target, -- 432
+		originalTarget = target, -- 433
+		countdown = ____exports.GameDataManager.CARD_COUNTDOWN, -- 434
+		frozen = false, -- 435
+		healAmount = 0, -- 436
+		copyArmed = false, -- 437
+		coins = {}, -- 438
+		eliminated = false, -- 439
+		special = false, -- 440
+		specialType = "" -- 441
+	} -- 441
+	local ____self_state_3, ____nextCardId_4 = self.state, "nextCardId" -- 441
+	____self_state_3[____nextCardId_4] = ____self_state_3[____nextCardId_4] + 1 -- 443
+	local ____self_state_cards_5 = self.state.cards -- 443
+	____self_state_cards_5[#____self_state_cards_5 + 1] = card -- 444
+end -- 428
+function GameDataManager.prototype.dealInitialCards(self) -- 448
+	while #self.state.cards < ____exports.GameDataManager.FIELD_CARD_COUNT do -- 448
+		self:dealCard() -- 450
+	end -- 450
+end -- 448
+function GameDataManager.prototype.findCard(self, cardId) -- 455
+	local cards = self.state.cards -- 456
+	do -- 456
+		local i = 0 -- 457
+		while i < #cards do -- 457
+			if cards[i + 1].id == cardId then -- 457
+				return cards[i + 1] -- 458
+			end -- 458
+			i = i + 1 -- 457
+		end -- 457
+	end -- 457
+	return nil -- 460
+end -- 455
+function GameDataManager.prototype.removeCard(self, cardId) -- 464
+	local cards = self.state.cards -- 465
+	do -- 465
+		local i = 0 -- 466
+		while i < #cards do -- 466
+			if cards[i + 1].id == cardId then -- 466
+				__TS__ArraySplice(cards, i, 1) -- 467
+				return -- 467
+			end -- 467
+			i = i + 1 -- 466
+		end -- 466
+	end -- 466
+end -- 464
+function GameDataManager.prototype.placeCoinOnCard(self, cardId, ____type, value) -- 472
+	local card = self:findCard(cardId) -- 473
+	if not card or card.eliminated then -- 473
+		return false -- 474
+	end -- 474
+	if self:stackCount(____type, value) <= 0 then -- 474
+		return false -- 475
+	end -- 475
+	if ____type == CoinType.Freeze then -- 475
+		card.frozen = true -- 479
+		self:consumeCoin(____type, value, 1) -- 480
+		return true -- 481
+	end -- 481
+	if ____type == CoinType.Discount then -- 481
+		self:applyDiscount(card, value) -- 484
+		self:consumeCoin(____type, value, 1) -- 485
+		return true -- 486
+	end -- 486
+	if ____type == CoinType.Heal then -- 486
+		card.healAmount = card.healAmount + value -- 489
+		self:consumeCoin(____type, value, 1) -- 490
+		return true -- 491
+	end -- 491
+	if ____type == CoinType.Copy then -- 491
+		card.copyArmed = true -- 494
+		self:consumeCoin(____type, value, 1) -- 495
+		return true -- 496
 	end -- 496
-	local specials = {CoinType.Freeze, CoinType.Heal, CoinType.Growth, CoinType.Disturb} -- 497
-	return { -- 498
-		type = specials[self:randomInt(0, #specials - 1) + 1], -- 498
-		value = 1, -- 498
-		count = 1 -- 498
-	} -- 498
-end -- 493
-function GameDataManager.prototype.coinCap(self, ____type) -- 504
-	return ____type == CoinType.Discount and ____exports.GameDataManager.DISCOUNT_MAX or ____exports.GameDataManager.COIN_MAX_VALUE -- 505
-end -- 504
-function GameDataManager.prototype.synthesizeCoins(self, ____type, valueA, valueB) -- 509
-	if self:stackCount(____type, valueA) < 1 then -- 509
-		return {ok = false, resultValue = 0} -- 510
-	end -- 510
-	if valueA == valueB and self:stackCount(____type, valueA) < 2 then -- 510
-		return {ok = false, resultValue = 0} -- 511
-	end -- 511
-	if valueA ~= valueB and self:stackCount(____type, valueB) < 1 then -- 511
-		return {ok = false, resultValue = 0} -- 512
-	end -- 512
-	self:consumeCoin(____type, valueA, 1) -- 513
-	self:consumeCoin(____type, valueB, 1) -- 514
-	local sum = math.min( -- 515
-		self:coinCap(____type), -- 515
-		valueA + valueB -- 515
-	) -- 515
-	self:addCoin(____type, sum, 1) -- 516
-	return {ok = true, resultValue = sum} -- 517
-end -- 509
-function GameDataManager.prototype.synthesizeOnce(self) -- 521
-	do -- 521
-		local t = 0 -- 522
-		while t < #COIN_TYPE_ORDER do -- 522
-			do -- 522
-				local ____type = COIN_TYPE_ORDER[t + 1] -- 523
-				local values = {} -- 524
-				local inv = self.state.inventory -- 525
-				do -- 525
-					local i = 0 -- 526
-					while i < #inv do -- 526
-						if inv[i + 1].type == ____type then -- 526
-							do -- 526
-								local k = 0 -- 528
-								while k < inv[i + 1].count do -- 528
-									values[#values + 1] = inv[i + 1].value -- 528
-									k = k + 1 -- 528
-								end -- 528
-							end -- 528
-						end -- 528
-						i = i + 1 -- 526
-					end -- 526
-				end -- 526
-				if #values < 2 then -- 526
-					goto __continue135 -- 531
-				end -- 531
-				local i1 = 0 -- 532
-				local i2 = 1 -- 533
-				if values[i2 + 1] < values[i1 + 1] then -- 533
-					local tmp = i1 -- 534
-					i1 = i2 -- 534
-					i2 = tmp -- 534
-				end -- 534
-				do -- 534
-					local i = 2 -- 535
-					while i < #values do -- 535
-						if values[i + 1] < values[i1 + 1] then -- 535
-							i2 = i1 -- 536
-							i1 = i -- 536
-						elseif values[i + 1] < values[i2 + 1] then -- 536
-							i2 = i -- 537
-						end -- 537
-						i = i + 1 -- 535
-					end -- 535
-				end -- 535
-				local a = values[i1 + 1] -- 539
-				local b = values[i2 + 1] -- 540
-				local r = self:synthesizeCoins(____type, a, b) -- 541
-				return { -- 542
-					ok = r.ok, -- 542
-					type = ____type, -- 542
-					valueA = a, -- 542
-					valueB = b, -- 542
-					resultValue = r.resultValue -- 542
-				} -- 542
-			end -- 542
-			::__continue135:: -- 542
-			t = t + 1 -- 522
-		end -- 522
-	end -- 522
-	return { -- 544
-		ok = false, -- 544
-		type = CoinType.Normal, -- 544
-		valueA = 0, -- 544
-		valueB = 0, -- 544
-		resultValue = 0 -- 544
-	} -- 544
-end -- 521
-function GameDataManager.prototype.deleteCoin(self, ____type, value, count) -- 548
-	if self.deleteCredits < count then -- 548
-		return {ok = false, reason = "删除次数不足"} -- 549
-	end -- 549
-	if not self:consumeCoin(____type, value, count) then -- 549
-		return {ok = false, reason = "硬币不足"} -- 550
-	end -- 550
-	self.deleteCredits = self.deleteCredits - count -- 551
-	return {ok = true, reason = ""} -- 552
-end -- 548
-function GameDataManager.prototype.deleteOnce(self) -- 556
-	local inv = self.state.inventory -- 557
-	if #inv == 0 then -- 557
-		return {ok = false, type = CoinType.Normal, value = 0, reason = "背包为空"} -- 558
-	end -- 558
-	local st = inv[1] -- 559
-	local r = self:deleteCoin(st.type, st.value, 1) -- 560
-	return {ok = r.ok, type = st.type, value = st.value, reason = r.reason} -- 561
-end -- 556
-function GameDataManager.prototype.upgradeMaxHp(self) -- 565
-	local cost = 100 -- 566
-	if self.metaMaxHp >= ____exports.GameDataManager.MAX_HP then -- 566
-		return {ok = false, cost = cost, newMaxHp = self.metaMaxHp, reason = "已达上限"} -- 567
-	end -- 567
-	if self.currency < cost then -- 567
-		return {ok = false, cost = cost, newMaxHp = self.metaMaxHp, reason = "货币不足"} -- 568
-	end -- 568
-	self.currency = self.currency - cost -- 569
-	self.state.currency = self.currency -- 570
-	self.metaMaxHp = self.metaMaxHp + 1 -- 571
-	self.state.maxHp = self.metaMaxHp -- 572
-	return {ok = true, cost = cost, newMaxHp = self.metaMaxHp, reason = ""} -- 573
-end -- 565
-function GameDataManager.prototype.upgradeDeleteCredits(self) -- 577
-	local cost = 80 -- 578
-	if self.currency < cost then -- 578
-		return {ok = false, cost = cost, newCredits = self.deleteCredits, reason = "货币不足"} -- 579
-	end -- 579
-	self.currency = self.currency - cost -- 580
-	self.state.currency = self.currency -- 581
-	self.deleteCredits = self.deleteCredits + 2 -- 582
-	return {ok = true, cost = cost, newCredits = self.deleteCredits, reason = ""} -- 583
-end -- 577
-function GameDataManager.prototype.sweepLevel(self) -- 587
-	if self.highestLevel < 2 then -- 587
-		return { -- 588
-			ok = false, -- 588
-			currency = 0, -- 588
-			coinType = CoinType.Normal, -- 588
-			coinValue = 0, -- 588
-			reason = "通关首关后开启" -- 588
-		} -- 588
-	end -- 588
-	local gain = math.min(1000, self.highestLevel * 30) -- 589
-	self.currency = self.currency + gain -- 590
-	self.state.currency = self.currency -- 591
-	local r = self:randomRewardCoin() -- 592
-	self:addCoin(r.type, r.value, 1) -- 593
-	return { -- 594
-		ok = true, -- 594
-		currency = gain, -- 594
-		coinType = r.type, -- 594
-		coinValue = r.value, -- 594
-		reason = "" -- 594
-	} -- 594
-end -- 587
-GameDataManager.START_HP = 2 -- 587
-GameDataManager.MAX_LEVEL = 15 -- 587
-GameDataManager.CARD_COUNTDOWN = 3 -- 587
-GameDataManager.FIELD_CARD_COUNT = 3 -- 587
-GameDataManager.COIN_MAX_VALUE = 999 -- 587
-GameDataManager.DISCOUNT_MAX = 100 -- 587
-GameDataManager.MAX_HP = 5 -- 587
-GameDataManager.TARGET_POOL = { -- 587
+	if ____type == CoinType.Wild then -- 496
+		self:consumeCoin(____type, value, 1) -- 499
+		self:eliminateCard(card) -- 500
+		return true -- 501
+	end -- 501
+	local negative = value < 0 -- 506
+	local op = "add" -- 507
+	if ____type == CoinType.Multiply then -- 507
+		op = negative and "div" or "mul" -- 508
+	elseif negative then -- 508
+		op = "sub" -- 509
+	end -- 509
+	local placed = { -- 510
+		type = ____type, -- 510
+		value = math.abs(value), -- 510
+		op = op -- 510
+	} -- 510
+	local ____card_coins_6 = card.coins -- 510
+	____card_coins_6[#____card_coins_6 + 1] = placed -- 511
+	self:consumeCoin(____type, value, 1) -- 512
+	return true -- 513
+end -- 472
+function GameDataManager.prototype.applyDiscount(self, card, percent) -- 517
+	local p = percent -- 518
+	if p < 0 then -- 518
+		p = 0 -- 519
+	end -- 519
+	if p > ____exports.GameDataManager.DISCOUNT_MAX then -- 519
+		p = ____exports.GameDataManager.DISCOUNT_MAX -- 520
+	end -- 520
+	card.target = math.max( -- 521
+		1, -- 521
+		math.floor(card.target * (100 - p) / 100 + 0.5) -- 521
+	) -- 521
+end -- 517
+function GameDataManager.prototype.togglePlacedCoin(self, cardId, index) -- 525
+	local card = self:findCard(cardId) -- 526
+	if not card or index < 0 or index >= #card.coins then -- 526
+		return -- 527
+	end -- 527
+	local c = card.coins[index + 1] -- 528
+	if c.type == CoinType.Multiply then -- 528
+		c.op = c.op == "mul" and "div" or "mul" -- 530
+	else -- 530
+		c.op = c.op == "sub" and "add" or "sub" -- 532
+	end -- 532
+end -- 525
+function GameDataManager.prototype.removePlacedCoin(self, cardId, index) -- 537
+	local card = self:findCard(cardId) -- 538
+	if not card or index < 0 or index >= #card.coins then -- 538
+		return false -- 539
+	end -- 539
+	local c = card.coins[index + 1] -- 540
+	__TS__ArraySplice(card.coins, index, 1) -- 541
+	local sign = (c.op == "sub" or c.op == "div") and -1 or 1 -- 543
+	self:addCoin(c.type, c.value * sign, 1) -- 544
+	return true -- 545
+end -- 537
+function GameDataManager.prototype.movePlacedCoin(self, fromCardId, index, toCardId) -- 549
+	local from = self:findCard(fromCardId) -- 550
+	local to = self:findCard(toCardId) -- 551
+	if not from or not to or from == to or index < 0 or index >= #from.coins then -- 551
+		return false -- 552
+	end -- 552
+	local c = from.coins[index + 1] -- 553
+	__TS__ArraySplice(from.coins, index, 1) -- 554
+	local ____to_coins_7 = to.coins -- 554
+	____to_coins_7[#____to_coins_7 + 1] = c -- 555
+	return true -- 556
+end -- 549
+function GameDataManager.prototype.evaluateCard(self, card) -- 560
+	local total = 0 -- 561
+	do -- 561
+		local i = 0 -- 562
+		while i < #card.coins do -- 562
+			local c = card.coins[i + 1] -- 563
+			if c.type == CoinType.Multiply then -- 563
+				if c.op == "div" then -- 563
+					total = c.value == 0 and total or math.floor(total / c.value) -- 566
+				else -- 566
+					total = total * c.value -- 568
+				end -- 568
+			else -- 568
+				if c.op == "sub" then -- 568
+					total = total - c.value -- 571
+				else -- 571
+					total = total + c.value -- 572
+				end -- 572
+			end -- 572
+			i = i + 1 -- 562
+		end -- 562
+	end -- 562
+	return total -- 575
+end -- 560
+function GameDataManager.prototype.confirmCard(self, cardId) -- 579
+	local result = { -- 580
+		ok = false, -- 581
+		reason = "none", -- 582
+		total = 0, -- 583
+		target = 0, -- 584
+		healGained = 0, -- 585
+		copiedValue = 0 -- 586
+	} -- 586
+	local card = self:findCard(cardId) -- 588
+	if not card then -- 588
+		return result -- 589
+	end -- 589
+	result.target = card.target -- 590
+	if card.eliminated then -- 590
+		result.reason = "eliminated" -- 591
+		return result -- 591
+	end -- 591
+	local total = self:evaluateCard(card) -- 592
+	result.total = total -- 593
+	if #card.coins == 0 then -- 593
+		result.reason = "no_coin" -- 594
+		return result -- 594
+	end -- 594
+	if total ~= card.target then -- 594
+		result.reason = "mismatch" -- 595
+		return result -- 595
+	end -- 595
+	local r = self:eliminateCard(card) -- 596
+	result.ok = true -- 597
+	result.reason = "ok" -- 598
+	result.healGained = r.healGained -- 599
+	result.copiedValue = r.copiedValue -- 600
+	return result -- 601
+end -- 579
+function GameDataManager.prototype.eliminateCard(self, card) -- 605
+	card.eliminated = true -- 606
+	local ____self_state_8, ____eliminatedCount_9 = self.state, "eliminatedCount" -- 606
+	____self_state_8[____eliminatedCount_9] = ____self_state_8[____eliminatedCount_9] + 1 -- 607
+	local healGained = 0 -- 608
+	if card.healAmount > 0 then -- 608
+		healGained = card.healAmount -- 610
+		self.state.hp = math.min(self.state.maxHp, self.state.hp + healGained) -- 611
+	end -- 611
+	local copiedValue = 0 -- 613
+	if card.copyArmed then -- 613
+		copiedValue = card.target -- 615
+		self:addCoin(CoinType.Normal, copiedValue, 1) -- 616
+	end -- 616
+	self:removeCard(card.id) -- 618
+	self:dealCard() -- 619
+	self:checkWin() -- 620
+	return {healGained = healGained, copiedValue = copiedValue} -- 621
+end -- 605
+function GameDataManager.prototype.endTurn(self) -- 625
+	local ____self_state_10, ____turn_11 = self.state, "turn" -- 625
+	____self_state_10[____turn_11] = ____self_state_10[____turn_11] + 1 -- 626
+	local fieldCards = self.state.cards -- 628
+	do -- 628
+		local i = #fieldCards - 1 -- 629
+		while i >= 0 do -- 629
+			do -- 629
+				local c = fieldCards[i + 1] -- 630
+				if c.eliminated then -- 630
+					goto __continue168 -- 631
+				end -- 631
+				if #c.coins > 0 and self:evaluateCard(c) == c.target then -- 631
+					self:eliminateCard(c) -- 632
+				end -- 632
+			end -- 632
+			::__continue168:: -- 632
+			i = i - 1 -- 629
+		end -- 629
+	end -- 629
+	local hpLost = 0 -- 634
+	local expiredCount = 0 -- 635
+	local cards = self.state.cards -- 636
+	do -- 636
+		local i = #cards - 1 -- 639
+		while i >= 0 do -- 639
+			do -- 639
+				local card = cards[i + 1] -- 640
+				if card.frozen then -- 640
+					card.frozen = false -- 641
+					goto __continue172 -- 641
+				end -- 641
+				card.countdown = card.countdown - 1 -- 642
+				if card.countdown <= 0 then -- 642
+					hpLost = hpLost + 1 -- 644
+					expiredCount = expiredCount + 1 -- 645
+					local ____self_state_12, ____hp_13 = self.state, "hp" -- 645
+					____self_state_12[____hp_13] = ____self_state_12[____hp_13] - 1 -- 646
+					__TS__ArraySplice(cards, i, 1) -- 647
+				end -- 647
+			end -- 647
+			::__continue172:: -- 647
+			i = i - 1 -- 639
+		end -- 639
+	end -- 639
+	do -- 639
+		local ci = 0 -- 652
+		while ci < #cards do -- 652
+			local card = cards[ci + 1] -- 653
+			do -- 653
+				local pi = 0 -- 654
+				while pi < #card.coins do -- 654
+					local pc = card.coins[pi + 1] -- 655
+					if pc.type == CoinType.Growth then -- 655
+						pc.value = math.min(____exports.GameDataManager.COIN_MAX_VALUE, pc.value * 2) -- 657
+					end -- 657
+					pi = pi + 1 -- 654
+				end -- 654
+			end -- 654
+			ci = ci + 1 -- 652
+		end -- 652
+	end -- 652
+	local inv = self.state.inventory -- 663
+	do -- 663
+		local i = #inv - 1 -- 664
+		while i >= 0 do -- 664
+			if inv[i + 1].type == CoinType.Disturb then -- 664
+				__TS__ArraySplice(inv, i, 1) -- 665
+			end -- 665
+			i = i - 1 -- 664
+		end -- 664
+	end -- 664
+	while #cards < ____exports.GameDataManager.FIELD_CARD_COUNT do -- 664
+		self:dealCard() -- 669
+	end -- 669
+	self:refillHand() -- 672
+	local won = false -- 675
+	local lost = false -- 676
+	if self.state.hp <= 0 then -- 676
+		self.state.hp = 0 -- 678
+		self.state.status = "lost" -- 679
+		lost = true -- 680
+	else -- 680
+		self:checkWin() -- 682
+		won = self.state.status == "won" -- 683
+	end -- 683
+	return {hpLost = hpLost, expiredCount = expiredCount, won = won, lost = lost} -- 685
+end -- 625
+function GameDataManager.prototype.checkWin(self) -- 689
+	if self.state.eliminatedCount >= self.state.targetCount and self.state.status == "playing" then -- 689
+		self.state.status = self.state.level >= ____exports.GameDataManager.MAX_LEVEL and "complete" or "won" -- 691
+	end -- 691
+end -- 689
+function GameDataManager.prototype.applyWinRewards(self) -- 696
+	local gain = ____exports.GameDataManager.WIN_CURRENCY_PER_LEVEL * self.state.level -- 697
+	local ____self_state_14, ____currency_15 = self.state, "currency" -- 697
+	____self_state_14[____currency_15] = ____self_state_14[____currency_15] + gain -- 698
+	self.currency = self.state.currency -- 699
+	local r = self:randomRewardCoin() -- 700
+	self:addCoin(r.type, r.value, 1) -- 701
+	return {currency = gain, coinType = r.type, coinValue = r.value} -- 702
+end -- 696
+function GameDataManager.prototype.randomRewardCoin(self) -- 706
+	local r = self:randomInt(1, 100) -- 707
+	if r <= 60 then -- 707
+		return { -- 708
+			type = CoinType.Normal, -- 708
+			value = self:randomInt(1, 10), -- 708
+			count = 1 -- 708
+		} -- 708
+	end -- 708
+	if r <= 80 then -- 708
+		return { -- 709
+			type = CoinType.Multiply, -- 709
+			value = self:randomInt(2, 4), -- 709
+			count = 1 -- 709
+		} -- 709
+	end -- 709
+	local specials = {CoinType.Freeze, CoinType.Heal, CoinType.Growth, CoinType.Disturb} -- 710
+	return { -- 711
+		type = specials[self:randomInt(0, #specials - 1) + 1], -- 711
+		value = 1, -- 711
+		count = 1 -- 711
+	} -- 711
+end -- 706
+function GameDataManager.prototype.coinCap(self, ____type) -- 717
+	return ____type == CoinType.Discount and ____exports.GameDataManager.DISCOUNT_MAX or ____exports.GameDataManager.COIN_MAX_VALUE -- 718
+end -- 717
+function GameDataManager.prototype.synthesizeCoins(self, ____type, valueA, valueB) -- 722
+	if self:stackCount(____type, valueA) < 1 then -- 722
+		return {ok = false, resultValue = 0} -- 723
+	end -- 723
+	if valueA == valueB and self:stackCount(____type, valueA) < 2 then -- 723
+		return {ok = false, resultValue = 0} -- 724
+	end -- 724
+	if valueA ~= valueB and self:stackCount(____type, valueB) < 1 then -- 724
+		return {ok = false, resultValue = 0} -- 725
+	end -- 725
+	self:consumeCoin(____type, valueA, 1) -- 726
+	self:consumeCoin(____type, valueB, 1) -- 727
+	local sum = math.min( -- 728
+		self:coinCap(____type), -- 728
+		valueA + valueB -- 728
+	) -- 728
+	self:addCoin(____type, sum, 1) -- 729
+	return {ok = true, resultValue = sum} -- 730
+end -- 722
+function GameDataManager.prototype.synthesizeOnce(self) -- 734
+	do -- 734
+		local t = 0 -- 735
+		while t < #COIN_TYPE_ORDER do -- 735
+			do -- 735
+				local ____type = COIN_TYPE_ORDER[t + 1] -- 736
+				local values = {} -- 737
+				local inv = self.state.inventory -- 738
+				do -- 738
+					local i = 0 -- 739
+					while i < #inv do -- 739
+						if inv[i + 1].type == ____type then -- 739
+							do -- 739
+								local k = 0 -- 741
+								while k < inv[i + 1].count do -- 741
+									values[#values + 1] = inv[i + 1].value -- 741
+									k = k + 1 -- 741
+								end -- 741
+							end -- 741
+						end -- 741
+						i = i + 1 -- 739
+					end -- 739
+				end -- 739
+				if #values < 2 then -- 739
+					goto __continue199 -- 744
+				end -- 744
+				local i1 = 0 -- 745
+				local i2 = 1 -- 746
+				if values[i2 + 1] < values[i1 + 1] then -- 746
+					local tmp = i1 -- 747
+					i1 = i2 -- 747
+					i2 = tmp -- 747
+				end -- 747
+				do -- 747
+					local i = 2 -- 748
+					while i < #values do -- 748
+						if values[i + 1] < values[i1 + 1] then -- 748
+							i2 = i1 -- 749
+							i1 = i -- 749
+						elseif values[i + 1] < values[i2 + 1] then -- 749
+							i2 = i -- 750
+						end -- 750
+						i = i + 1 -- 748
+					end -- 748
+				end -- 748
+				local a = values[i1 + 1] -- 752
+				local b = values[i2 + 1] -- 753
+				local r = self:synthesizeCoins(____type, a, b) -- 754
+				return { -- 755
+					ok = r.ok, -- 755
+					type = ____type, -- 755
+					valueA = a, -- 755
+					valueB = b, -- 755
+					resultValue = r.resultValue -- 755
+				} -- 755
+			end -- 755
+			::__continue199:: -- 755
+			t = t + 1 -- 735
+		end -- 735
+	end -- 735
+	return { -- 757
+		ok = false, -- 757
+		type = CoinType.Normal, -- 757
+		valueA = 0, -- 757
+		valueB = 0, -- 757
+		resultValue = 0 -- 757
+	} -- 757
+end -- 734
+function GameDataManager.prototype.deleteCoin(self, ____type, value, count) -- 761
+	if self.deleteCredits < count then -- 761
+		return {ok = false, reason = "删除次数不足"} -- 762
+	end -- 762
+	if not self:consumeCoin(____type, value, count) then -- 762
+		return {ok = false, reason = "硬币不足"} -- 763
+	end -- 763
+	self.deleteCredits = self.deleteCredits - count -- 764
+	return {ok = true, reason = ""} -- 765
+end -- 761
+function GameDataManager.prototype.deleteOnce(self) -- 769
+	local inv = self.state.inventory -- 770
+	if #inv == 0 then -- 770
+		return {ok = false, type = CoinType.Normal, value = 0, reason = "背包为空"} -- 771
+	end -- 771
+	local st = inv[1] -- 772
+	local r = self:deleteCoin(st.type, st.value, 1) -- 773
+	return {ok = r.ok, type = st.type, value = st.value, reason = r.reason} -- 774
+end -- 769
+function GameDataManager.prototype.upgradeMaxHp(self) -- 778
+	local cost = 100 -- 779
+	if self.metaMaxHp >= ____exports.GameDataManager.MAX_HP then -- 779
+		return {ok = false, cost = cost, newMaxHp = self.metaMaxHp, reason = "已达上限"} -- 780
+	end -- 780
+	if self.currency < cost then -- 780
+		return {ok = false, cost = cost, newMaxHp = self.metaMaxHp, reason = "货币不足"} -- 781
+	end -- 781
+	self.currency = self.currency - cost -- 782
+	self.state.currency = self.currency -- 783
+	self.metaMaxHp = self.metaMaxHp + 1 -- 784
+	self.state.maxHp = self.metaMaxHp -- 785
+	return {ok = true, cost = cost, newMaxHp = self.metaMaxHp, reason = ""} -- 786
+end -- 778
+function GameDataManager.prototype.upgradeDeleteCredits(self) -- 790
+	local cost = 80 -- 791
+	if self.currency < cost then -- 791
+		return {ok = false, cost = cost, newCredits = self.deleteCredits, reason = "货币不足"} -- 792
+	end -- 792
+	self.currency = self.currency - cost -- 793
+	self.state.currency = self.currency -- 794
+	self.deleteCredits = self.deleteCredits + 2 -- 795
+	return {ok = true, cost = cost, newCredits = self.deleteCredits, reason = ""} -- 796
+end -- 790
+function GameDataManager.prototype.sweepLevel(self) -- 800
+	if self.highestLevel < 2 then -- 800
+		return { -- 801
+			ok = false, -- 801
+			currency = 0, -- 801
+			coinType = CoinType.Normal, -- 801
+			coinValue = 0, -- 801
+			reason = "通关首关后开启" -- 801
+		} -- 801
+	end -- 801
+	local gain = math.min(1000, self.highestLevel * 30) -- 802
+	self.currency = self.currency + gain -- 803
+	self.state.currency = self.currency -- 804
+	local r = self:randomRewardCoin() -- 805
+	self:addCoin(r.type, r.value, 1) -- 806
+	return { -- 807
+		ok = true, -- 807
+		currency = gain, -- 807
+		coinType = r.type, -- 807
+		coinValue = r.value, -- 807
+		reason = "" -- 807
+	} -- 807
+end -- 800
+GameDataManager.START_HP = 2 -- 800
+GameDataManager.MAX_LEVEL = 15 -- 800
+GameDataManager.CARD_COUNTDOWN = 3 -- 800
+GameDataManager.FIELD_CARD_COUNT = 3 -- 800
+GameDataManager.COIN_MAX_VALUE = 999 -- 800
+GameDataManager.DISCOUNT_MAX = 100 -- 800
+GameDataManager.MAX_HP = 5 -- 800
+GameDataManager.HAND_SIZE = 12 -- 800
+GameDataManager.WIN_CURRENCY_PER_LEVEL = 100 -- 800
+GameDataManager.BASE_VALUES = { -- 800
+	1, -- 26
 	2, -- 26
 	3, -- 26
-	4, -- 26
 	5, -- 26
-	6, -- 26
-	7, -- 26
-	8, -- 26
-	9, -- 26
 	10, -- 26
-	11, -- 26
-	12, -- 26
-	14, -- 26
-	15, -- 26
-	16, -- 26
-	18, -- 26
-	20, -- 26
-	21, -- 26
-	24, -- 26
-	25, -- 26
-	27, -- 26
-	30 -- 26
+	50 -- 26
 } -- 26
-return ____exports -- 26
+GameDataManager.BASE_COIN_COST = 100 -- 26
+GameDataManager.POOL_LOW = { -- 26
+	2, -- 32
+	3, -- 32
+	4, -- 32
+	5, -- 32
+	6, -- 32
+	7, -- 32
+	8, -- 32
+	9, -- 32
+	10, -- 32
+	11, -- 32
+	12, -- 32
+	14, -- 32
+	15, -- 32
+	16, -- 32
+	18, -- 32
+	20 -- 32
+} -- 32
+GameDataManager.POOL_MID = { -- 32
+	2, -- 35
+	3, -- 35
+	4, -- 35
+	5, -- 35
+	6, -- 35
+	7, -- 35
+	8, -- 35
+	9, -- 35
+	10, -- 35
+	11, -- 35
+	12, -- 35
+	14, -- 35
+	15, -- 35
+	16, -- 35
+	18, -- 35
+	20, -- 35
+	21, -- 35
+	22, -- 35
+	24, -- 35
+	25, -- 35
+	27, -- 35
+	28 -- 35
+} -- 35
+GameDataManager.POOL_HIGH = { -- 35
+	3, -- 38
+	4, -- 38
+	5, -- 38
+	6, -- 38
+	7, -- 38
+	8, -- 38
+	9, -- 38
+	10, -- 38
+	11, -- 38
+	12, -- 38
+	14, -- 38
+	15, -- 38
+	16, -- 38
+	18, -- 38
+	20, -- 38
+	21, -- 38
+	22, -- 38
+	24, -- 38
+	25, -- 38
+	27, -- 38
+	28, -- 38
+	30, -- 39
+	32, -- 39
+	35, -- 39
+	36, -- 39
+	40, -- 39
+	42, -- 39
+	45 -- 39
+} -- 39
+return ____exports -- 39

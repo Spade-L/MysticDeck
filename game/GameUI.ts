@@ -184,7 +184,7 @@ export class GameUI {
   private lastMoveLog = 0;
   // ===== 界面状态与设置 =====
   private screenLayer: Node.Type;
-  private screen: 'menu' | 'levels' | 'settings' | 'game' = 'menu';
+  private screen: 'menu' | 'levels' | 'settings' | 'meta' | 'game' = 'menu';
   private settingsBack: 'menu' | 'levels' = 'menu';
   private save: SaveFile;
   private bgmSource: AudioSource.Type | undefined;
@@ -359,10 +359,10 @@ export class GameUI {
     this.renderScreen();
   }
 
-  // 对局内的两个常驻按钮（每次进入对局重建，避免菜单界面上残留）
+  // 对局内的常驻按钮（每次进入对局重建，避免菜单界面上残留）
+  // 已删除「确定」：改为「结束回合」时自动消除算式匹配的卡牌
   private renderActionButtons(): void {
     this.actionLayer.removeAllChildren();
-    this.makeButton(this.confirmBtn, '确定', [188, 160, 234, 255], [116, 90, 156, 255], Color(30, 20, 44, 255), () => this.doConfirm());
     this.makeButton(this.endTurnBtn, '结束回合', [132, 106, 172, 255], [74, 55, 100, 255], Color(234, 226, 250, 255), () => this.doEndTurn());
   }
 
@@ -383,6 +383,7 @@ export class GameUI {
     if (this.screen === 'menu') this.renderMenu();
     else if (this.screen === 'settings') this.renderSettings();
     else if (this.screen === 'levels') this.renderLevels();
+    else if (this.screen === 'meta') this.renderMetaPanel(this.screenLayer);
   }
 
   private renderMenu(): void {
@@ -487,7 +488,8 @@ export class GameUI {
       }
     }
 
-    this.makeButton({ x: 0, y: -560, w: 240, h: 62 }, '返回', [132, 106, 172, 255], [74, 55, 100, 255], Color(234, 226, 250, 255), () => { this.screen = 'menu'; this.refresh(); }, this.screenLayer, 24);
+    this.makeButton({ x: -140, y: -560, w: 220, h: 62 }, '养成', [132, 106, 172, 255], [74, 55, 100, 255], Color(234, 226, 250, 255), () => { this.metaMessage = ''; this.screen = 'meta'; this.refresh(); }, this.screenLayer, 24);
+    this.makeButton({ x: 140, y: -560, w: 220, h: 62 }, '返回', [132, 106, 172, 255], [74, 55, 100, 255], Color(234, 226, 250, 255), () => { this.screen = 'menu'; this.refresh(); }, this.screenLayer, 24);
   }
 
   // 开始指定关卡（重置结算状态）
@@ -547,7 +549,7 @@ export class GameUI {
     makeLabel(this.hudLayer, '需消除 ' + s.eliminatedCount + '/' + s.targetCount + ' 张', 0, 545, 18, C_TEXT_DIM);
     makeLabel(this.hudLayer, '回合 ' + s.turn, 120, 585, 22, C_TEXT);
     // 操作提示
-    const hint = this.hintText !== '' ? this.hintText : '拖硬币到卡牌 · 点硬币切换正负 · 点卡牌后确定';
+    const hint = this.hintText !== '' ? this.hintText : '拖硬币到卡牌 · 点硬币切换正负 · 结束回合自动消除';
     makeLabel(this.hudLayer, hint, 0, 498, 22, this.hintText !== '' ? C_DANGER : C_GOLD_TEXT);
   }
 
@@ -810,7 +812,7 @@ export class GameUI {
     dim.addTo(this.overlayLayer);
 
     if (this.metaOpen) {
-      this.renderMetaPanel();
+      this.renderMetaPanel(this.overlayLayer);
       return;
     }
 
@@ -846,28 +848,46 @@ export class GameUI {
     }
   }
 
-  private renderMetaPanel(): void {
+  private renderMetaPanel(parent: Node.Type): void {
+    const W = 660;
+    const H = 1010;
     const panel = DrawNode();
-    panel.drawPolygon(rectVerts(0, 0, 640, 560), C_PANEL, 4, C_PANEL_BORDER);
-    panel.addTo(this.overlayLayer);
+    panel.drawPolygon(rectVerts(0, 0, W, H), C_PANEL, 4, C_PANEL_BORDER);
+    drawBand(panel, 0, 0, W, H, 3, C_GOLD_DARK);
+    drawBand(panel, 0, 0, W - 16, H - 16, 1, C_GOLD);
+    drawCorners(panel, 0, 0, W, H, 20, 11, C_GOLD_BRIGHT);
+    panel.drawSegment(Vec2(-286, 292), Vec2(286, 292), 1, C_GOLD_DARK);
+    panel.drawSegment(Vec2(-286, 96), Vec2(286, 96), 1, C_GOLD_DARK);
+    panel.addTo(parent);
 
     const s = this.mgr.state;
-    makeLabel(this.overlayLayer, '局外养成', 0, 230, 30, C_GOLD_TEXT);
-    makeLabel(this.overlayLayer, '货币 ' + s.currency + ' · 血量上限 ' + s.maxHp + ' · 删除次数 ' + this.mgr.deleteCredits, 0, 180, 16, C_TEXT);
-    makeLabel(this.overlayLayer, '扫荡奖励按最高关卡计，货币上限 1000', 0, 148, 13, C_TEXT_DIM);
+    makeLabel(parent, '局外养成', 0, 436, 36, C_GOLD_TEXT);
+    makeLabel(parent, '货币 ' + s.currency + ' · 血量上限 ' + s.maxHp + ' · 删除次数 ' + this.mgr.deleteCredits, 0, 384, 17, C_TEXT);
+    makeLabel(parent, '扫荡奖励按最高关卡计，货币上限 1000', 0, 354, 13, C_TEXT_DIM);
     if (this.metaMessage !== '') {
-      makeLabel(this.overlayLayer, this.metaMessage, 0, 112, 14, Color(120, 220, 150, 255));
+      makeLabel(parent, this.metaMessage, 0, 320, 16, C_GOLD_TEXT);
     }
 
-    this.addOverlayButton('合成硬币', 0, 60, 300, 44, Color(104, 82, 148, 255), 'synthesize');
-    this.addOverlayButton('强化血量（100）', 0, 4, 300, 44, C_ENDTURN, 'upgradeHp');
-    this.addOverlayButton('强化删除次数（80）', 0, -52, 300, 44, C_ENDTURN, 'upgradeDelete');
-    this.addOverlayButton('删除一枚硬币', 0, -108, 300, 44, Color(158, 70, 104, 255), 'delete');
-    this.addOverlayButton('扫荡', 0, -164, 300, 44, C_CONFIRM, 'sweep');
-    this.addOverlayButton('返回', 0, -230, 300, 44, Color(84, 70, 118, 255), 'back');
+    makeLabel(parent, '增加基础硬币（每枚 100 货币）', 0, 258, 21, C_TEXT);
+    const buyValues: number[] = [1, 2, 3, 5, 10, 50];
+    for (let i = 0; i < buyValues.length; i++) {
+      const col = i % 3;
+      const row = Math.floor(i / 3);
+      const bx = -212 + col * 212;
+      const by = 202 - row * 74;
+      this.addOverlayButton('＋' + buyValues[i], bx, by, 186, 52, C_ENDTURN, 'buy' + i, parent, 22);
+    }
+
+    this.addOverlayButton('合成硬币', 0, 50, 340, 52, Color(104, 82, 148, 255), 'synthesize', parent, 21);
+    this.addOverlayButton('强化血量（100）', 0, -24, 340, 52, C_ENDTURN, 'upgradeHp', parent, 21);
+    this.addOverlayButton('强化删除次数（80）', 0, -98, 340, 52, C_ENDTURN, 'upgradeDelete', parent, 21);
+    this.addOverlayButton('删除一枚硬币', 0, -172, 340, 52, Color(158, 70, 104, 255), 'delete', parent, 21);
+    this.addOverlayButton('扫荡', 0, -246, 340, 52, C_CONFIRM, 'sweep', parent, 21);
+
+    this.addOverlayButton('返回', 0, -388, 320, 58, Color(84, 70, 118, 255), 'back', parent, 23);
   }
 
-  private addOverlayButton(text: string, cx: number, cy: number, w: number, h: number, color: Color.Type, action: string): void {
+  private addOverlayButton(text: string, cx: number, cy: number, w: number, h: number, color: Color.Type, action: string, parent?: Node.Type, fontSize?: number): void {
     const node = Node();
     node.position = Vec2(cx, cy);
     node.size = Size(w, h);
@@ -875,10 +895,10 @@ export class GameUI {
     const d = DrawNode();
     d.drawPolygon(rectVerts(w / 2, h / 2, w, h), color, 2, C_CONFIRM_BORDER);
     d.addTo(node);
-    makeLabel(node, text, w / 2, h / 2, 20, C_TEXT);
+    makeLabel(node, text, w / 2, h / 2, fontSize ? fontSize : 20, C_TEXT);
     node.touchEnabled = true;
     node.onTapped(() => this.handleOverlayAction(action));
-    node.addTo(this.overlayLayer);
+    node.addTo(parent ? parent : this.overlayLayer);
   }
 
   private handleOverlayAction(action: string): void {
@@ -928,6 +948,14 @@ export class GameUI {
     if (action === 'back') {
       this.metaOpen = false;
       this.metaMessage = '';
+      if (this.screen === 'meta') this.screen = 'levels';
+      this.refresh();
+      return;
+    }
+    if (action.indexOf('buy') === 0) {
+      const idx = Number(action.substring(3));
+      const br = this.mgr.buyBaseCoin(idx);
+      this.metaMessage = br.ok ? ('已增加基础硬币 ' + br.value) : br.reason;
       this.refresh();
       return;
     }

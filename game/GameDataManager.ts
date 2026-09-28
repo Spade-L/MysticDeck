@@ -20,17 +20,35 @@ export class GameDataManager {
   static readonly COIN_MAX_VALUE = 999;  // 硬币数值上限
   static readonly DISCOUNT_MAX = 100;    // 折扣上限（百分比）
   static readonly MAX_HP = 5;             // 强化后的血量上限
+  static readonly HAND_SIZE = 12;        // 硬币槽容量（每关开局发到手上的硬币数）
+  static readonly WIN_CURRENCY_PER_LEVEL = 100; // 通关奖励 = 关卡数 × 100
+  // 可在养成界面购买的基础硬币点数（每枚 100 货币）
+  static readonly BASE_VALUES: number[] = [1, 2, 3, 5, 10, 50];
+  static readonly BASE_COIN_COST = 100;
 
-  // 可消除的目标数字池（保证开局可解）
-  private static readonly TARGET_POOL: number[] = [
-    2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 18, 20, 21, 24, 25, 27, 30,
+  // 按关卡分层的目标数字池（难度渐进）
+  // 第 7 关前不出现二十多；第 12 关前不出现三、四十
+  private static readonly POOL_LOW: number[] = [
+    2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 18, 20,
+  ];
+  private static readonly POOL_MID: number[] = [
+    2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 18, 20, 21, 22, 24, 25, 27, 28,
+  ];
+  private static readonly POOL_HIGH: number[] = [
+    3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 18, 20, 21, 22, 24, 25, 27, 28,
+    30, 32, 35, 36, 40, 42, 45,
   ];
 
   // 历史最高关卡、货币、硬币背包（跨关卡保留）
   private highestLevel = 1;
   private currency = 0;
-  private inventory: CoinStack[] = [];
   private metaMaxHp = GameDataManager.START_HP;
+  // 硬币循环：预备槽（用过的硬币排到末尾，前端按顺序补进硬币槽）
+  private reserve: CoinStack[] = [];
+  // 养成本购买的基础硬币数量（索引对应 BASE_VALUES）
+  private boughtBase: number[] = [0, 0, 0, 0, 0, 0];
+  // 技能硬币只在硬币池里种一次（之后靠 extraCoins 循环携带，不能每关重发）
+  private skillsSeeded = false;
   deleteCredits = 3;
 
   state: GameState;
@@ -75,17 +93,161 @@ export class GameDataManager {
     if (lvl < 1) lvl = 1;
     if (lvl > GameDataManager.MAX_LEVEL) lvl = GameDataManager.MAX_LEVEL;
     if (lvl > this.highestLevel) this.highestLevel = lvl;
-    if (this.inventory.length === 0) this.inventory = this.buildStartingInventory();
 
+    // 保留玩家额外获得的硬币（技能/奖励硬币）；基础硬币每关按顺序重新刷新
+    const extra = this.extraCoins();
     this.state = this.createEmptyState();
     this.state.level = lvl;
     this.state.highestLevel = this.highestLevel;
     this.state.currency = this.currency;
-    this.state.inventory = this.inventory;
+    // 硬币循环：重置预备槽并发一手硬币（技能硬币随机，不一定开局就有）
+    this.resetCoinCycle(extra);
     this.state.maxHp = this.metaMaxHp;
     this.state.hp = this.metaMaxHp;
     this.state.targetCount = GameDataManager.levelTarget(lvl);
     this.dealInitialCards();
+  }
+
+  // ===== 硬币循环（预备槽 / 硬币槽） =====
+
+  // 基础硬币：按顺序 1、2、3、5、10，每种多枚
+  private buildBaseCoins(): CoinStack[] {
+    const list: CoinStack[] = [];
+    list.push({ type: CoinType.Normal, value: 1, count: 4 });
+    list.push({ type: CoinType.Normal, value: 2, count: 3 });
+    list.push({ type: CoinType.Normal, value: 3, count: 2 });
+    list.push({ type: CoinType.Normal, value: 5, count: 2 });
+    list.push({ type: CoinType.Normal, value: 10, count: 1 });
+    return list;
+  }
+
+  // 技能硬币：开局不一定都在手上，随机排在预备槽里
+  private buildSkillCoins(): CoinStack[] {
+    const list: CoinStack[] = [];
+    list.push({ type: CoinType.Multiply, value: 2, count: 2 });
+    list.push({ type: CoinType.Multiply, value: 3, count: 1 });
+    list.push({ type: CoinType.Freeze, value: 1, count: 1 });
+    list.push({ type: CoinType.Discount, value: 20, count: 1 });
+    list.push({ type: CoinType.Copy, value: 1, count: 1 });
+    list.push({ type: CoinType.Wild, value: 1, count: 1 });
+    list.push({ type: CoinType.Growth, value: 1, count: 1 });
+    list.push({ type: CoinType.Heal, value: 1, count: 2 });
+    list.push({ type: CoinType.Disturb, value: 7, count: 1 });
+    return list;
+  }
+
+  // 展开成逐枚硬币
+  private expandCoins(list: CoinStack[]): CoinStack[] {
+    const out: CoinStack[] = [];
+    for (let i = 0; i < list.length; i++) {
+      const s = list[i];
+      for (let k = 0; k < s.count; k++) out.push({ type: s.type, value: s.value, count: 1 });
+    }
+    return out;
+  }
+
+  // 洗牌（Fisher–Yates）
+  private shuffleCoins(list: CoinStack[]): CoinStack[] {
+    for (let i = list.length - 1; i > 0; i--) {
+      const j = this.randomInt(0, i);
+      const tmp = list[i];
+      list[i] = list[j];
+      list[j] = tmp;
+    }
+    return list;
+  }
+
+  // 把若干堆叠展开后追加进目标列表
+  private collectStack(out: CoinStack[], list: CoinStack[]): void {
+    for (let i = 0; i < list.length; i++) {
+      const s = list[i];
+      for (let k = 0; k < s.count; k++) out.push({ type: s.type, value: s.value, count: 1 });
+    }
+  }
+
+  // 是否属于基础硬币（BASE_VALUES 里的普通硬币）
+  private isBaseCoin(type: CoinType, value: number): boolean {
+    if (type !== CoinType.Normal) return false;
+    for (let i = 0; i < GameDataManager.BASE_VALUES.length; i++) {
+      if (value === GameDataManager.BASE_VALUES[i]) return true;
+    }
+    return false;
+  }
+
+  // 养成本：花 100 货币增加一枚指定点数的基础硬币
+  buyBaseCoin(idx: number): { ok: boolean; value: number; reason: string } {
+    if (idx < 0 || idx >= GameDataManager.BASE_VALUES.length) {
+      return { ok: false, value: 0, reason: '无效的点数' };
+    }
+    if (this.currency < GameDataManager.BASE_COIN_COST) {
+      return { ok: false, value: 0, reason: '货币不足' };
+    }
+    this.currency -= GameDataManager.BASE_COIN_COST;
+    this.state.currency = this.currency;
+    this.boughtBase[idx] += 1;
+    return { ok: true, value: GameDataManager.BASE_VALUES[idx], reason: '' };
+  }
+
+  // 已购买的基础硬币总数
+  boughtBaseTotal(): number {
+    let n = 0;
+    for (let i = 0; i < this.boughtBase.length; i++) n += this.boughtBase[i];
+    return n;
+  }
+
+  // 玩家额外获得的硬币（非基础）：跨关卡保留并参与循环
+  private extraCoins(): CoinStack[] {
+    const all: CoinStack[] = [];
+    this.collectStack(all, this.state.inventory);
+    this.collectStack(all, this.reserve);
+    const out: CoinStack[] = [];
+    for (let i = 0; i < all.length; i++) {
+      const c = all[i];
+      if (!this.isBaseCoin(c.type, c.value)) out.push({ type: c.type, value: c.value, count: 1 });
+    }
+    return out;
+  }
+
+  // 重置硬币循环：基础/技能/额外硬币全部混在一起打乱（预备槽是随机的，
+  // 不会一次性全是技能硬币或全是基础硬币）；发 HAND_SIZE 枚进硬币槽
+  private resetCoinCycle(extra: CoinStack[]): void {
+    const pool: CoinStack[] = [];
+    const base = this.expandCoins(this.buildBaseCoins());
+    for (let i = 0; i < base.length; i++) pool.push(base[i]);
+    // 养成本购买的基础硬币
+    for (let i = 0; i < GameDataManager.BASE_VALUES.length; i++) {
+      for (let k = 0; k < this.boughtBase[i]; k++) {
+        pool.push({ type: CoinType.Normal, value: GameDataManager.BASE_VALUES[i], count: 1 });
+      }
+    }
+    // 技能硬币只在第一次种入；之后它们作为“非基础硬币”由 extraCoins 循环携带，
+    // 否则每关都会重发一整套，池子会被灌爆并稀释稀有硬币
+    if (!this.skillsSeeded) {
+      this.skillsSeeded = true;
+      const skills = this.expandCoins(this.buildSkillCoins());
+      for (let i = 0; i < skills.length; i++) pool.push(skills[i]);
+    }
+    const extraList = this.expandCoins(extra);
+    for (let i = 0; i < extraList.length; i++) pool.push(extraList[i]);
+
+    this.shuffleCoins(pool);
+
+    const hand: CoinStack[] = [];
+    let handCount = 0;
+    while (handCount < GameDataManager.HAND_SIZE && pool.length > 0) {
+      const c = pool.splice(0, 1)[0];
+      this.addToStack(hand, c.type, c.value, c.count);
+      handCount++;
+    }
+    this.state.inventory = hand;
+    this.reserve = pool;
+  }
+
+  // 从预备槽前端取一枚补进硬币槽
+  private drawFromReserve(): void {
+    if (this.reserve.length === 0) return;
+    const c = this.reserve.splice(0, 1)[0];
+    this.addToStack(this.state.inventory, c.type, c.value, c.count);
   }
 
   // 关卡目标卡牌数：第 1 关 3 张，第 15 关 20 张，线性递增
@@ -148,6 +310,8 @@ export class GameDataManager {
   }
 
   // 消耗指定硬币，成功返回 true
+  // 硬币循环：用掉的硬币立即归入预备槽末尾；但**不在使用时补牌**，
+  // 预备槽前端只在“结束回合”时（refillHand）才补进硬币槽
   consumeCoin(type: CoinType, value: number, count: number): boolean {
     const inv = this.state.inventory;
     for (let i = 0; i < inv.length; i++) {
@@ -156,10 +320,24 @@ export class GameDataManager {
         if (s.count < count) return false;
         s.count -= count;
         if (s.count <= 0) inv.splice(i, 1);
+        for (let k = 0; k < count; k++) {
+          this.reserve.push({ type: type, value: value, count: 1 });
+        }
         return true;
       }
     }
     return false;
+  }
+
+  // 结束回合时刷新硬币资源：从预备槽前端补满硬币槽
+  refillHand(): void {
+    const inv = this.state.inventory;
+    let handCount = 0;
+    for (let i = 0; i < inv.length; i++) handCount += inv[i].count;
+    while (handCount < GameDataManager.HAND_SIZE && this.reserve.length > 0) {
+      this.drawFromReserve();
+      handCount++;
+    }
   }
 
   // 查询某类型某数值硬币的数量
@@ -220,10 +398,35 @@ export class GameDataManager {
     return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 
+  // 按关卡挑选目标数字（难度渐进，且不一次性出现太多大数字）
+  private pickTarget(level: number, cards: Card[]): number {
+    let pool: number[];
+    let big: number;
+    if (level >= 12) {
+      pool = GameDataManager.POOL_HIGH;
+      big = 30;
+    } else if (level >= 7) {
+      pool = GameDataManager.POOL_MID;
+      big = 30;
+    } else {
+      pool = GameDataManager.POOL_LOW;
+      big = 20;
+    }
+    let bigOnField = 0;
+    for (let i = 0; i < cards.length; i++) {
+      if (cards[i].target >= big) bigOnField++;
+    }
+    const useSmall = bigOnField >= 1;
+    for (let attempt = 0; attempt < 12; attempt++) {
+      const t = pool[this.randomInt(0, pool.length - 1)];
+      if (!useSmall || t < big) return t;
+    }
+    return 3;
+  }
+
   // 发一张卡牌
   private dealCard(): void {
-    const pool = GameDataManager.TARGET_POOL;
-    const target = pool[this.randomInt(0, pool.length - 1)];
+    const target = this.pickTarget(this.state.level, this.state.cards);
     const card: Card = {
       id: this.state.nextCardId,
       target: target,
@@ -421,6 +624,13 @@ export class GameDataManager {
   // 回合结算
   endTurn(): TurnResult {
     this.state.turn++;
+    // 0. 自动消除：算式结果与目标数字一致的卡牌（无需“确定”）
+    const fieldCards = this.state.cards;
+    for (let i = fieldCards.length - 1; i >= 0; i--) {
+      const c = fieldCards[i];
+      if (c.eliminated) continue;
+      if (c.coins.length > 0 && this.evaluateCard(c) === c.target) this.eliminateCard(c);
+    }
     let hpLost = 0;
     let expiredCount = 0;
     const cards = this.state.cards;
@@ -458,6 +668,9 @@ export class GameDataManager {
     // 4. 补发卡牌
     while (cards.length < GameDataManager.FIELD_CARD_COUNT) this.dealCard();
 
+    // 4.5 刷新硬币资源：只在结束回合时从预备槽前端补满硬币槽
+    this.refillHand();
+
     // 5. 胜负判定
     let won = false;
     let lost = false;
@@ -481,7 +694,7 @@ export class GameDataManager {
 
   // 关卡胜利后的奖励（货币 + 随机新硬币），返回奖励信息供 UI 展示
   applyWinRewards(): { currency: number; coinType: CoinType; coinValue: number } {
-    const gain = 50 + this.state.level * 10;
+    const gain = GameDataManager.WIN_CURRENCY_PER_LEVEL * this.state.level;
     this.state.currency += gain;
     this.currency = this.state.currency;
     const r = this.randomRewardCoin();

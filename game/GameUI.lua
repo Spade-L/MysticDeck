@@ -2,6 +2,8 @@
 local ____lualib = require("lualib_bundle") -- 1
 local __TS__Class = ____lualib.__TS__Class -- 1
 local __TS__New = ____lualib.__TS__New -- 1
+local __TS__StringSubstring = ____lualib.__TS__StringSubstring -- 1
+local __TS__Number = ____lualib.__TS__Number -- 1
 local ____exports = {} -- 1
 local ____Dora = require("Dora") -- 2
 local App = ____Dora.App -- 2
@@ -619,16 +621,8 @@ function GameUI.prototype.refresh(self) -- 339
 	self.actionLayer:removeAllChildren() -- 358
 	self:renderScreen() -- 359
 end -- 339
-function GameUI.prototype.renderActionButtons(self) -- 363
-	self.actionLayer:removeAllChildren() -- 364
-	self:makeButton( -- 365
-		self.confirmBtn, -- 365
-		"确定", -- 365
-		{188, 160, 234, 255}, -- 365
-		{116, 90, 156, 255}, -- 365
-		Color(30, 20, 44, 255), -- 365
-		function() return self:doConfirm() end -- 365
-	) -- 365
+function GameUI.prototype.renderActionButtons(self) -- 364
+	self.actionLayer:removeAllChildren() -- 365
 	self:makeButton( -- 366
 		self.endTurnBtn, -- 366
 		"结束回合", -- 366
@@ -637,7 +631,7 @@ function GameUI.prototype.renderActionButtons(self) -- 363
 		Color(234, 226, 250, 255), -- 366
 		function() return self:doEndTurn() end -- 366
 	) -- 366
-end -- 363
+end -- 364
 function GameUI.prototype.renderScreen(self) -- 371
 	self.screenLayer:removeAllChildren() -- 372
 	local d = DrawNode() -- 373
@@ -673,27 +667,20 @@ function GameUI.prototype.renderScreen(self) -- 371
 		self:renderSettings() -- 384
 	elseif self.screen == "levels" then -- 384
 		self:renderLevels() -- 385
-	end -- 385
+	elseif self.screen == "meta" then -- 385
+		self:renderMetaPanel(self.screenLayer) -- 386
+	end -- 386
 end -- 371
-function GameUI.prototype.renderMenu(self) -- 388
-	local d = DrawNode() -- 389
-	drawGrad( -- 390
-		d, -- 390
-		0, -- 390
-		320, -- 390
-		560, -- 390
-		210, -- 390
-		{54, 41, 74, 255}, -- 390
-		{24, 18, 34, 255} -- 390
-	) -- 390
-	drawBand( -- 391
+function GameUI.prototype.renderMenu(self) -- 389
+	local d = DrawNode() -- 390
+	drawGrad( -- 391
 		d, -- 391
 		0, -- 391
 		320, -- 391
 		560, -- 391
 		210, -- 391
-		3, -- 391
-		C_GOLD_DARK -- 391
+		{54, 41, 74, 255}, -- 391
+		{24, 18, 34, 255} -- 391
 	) -- 391
 	drawBand( -- 392
 		d, -- 392
@@ -701,95 +688,95 @@ function GameUI.prototype.renderMenu(self) -- 388
 		320, -- 392
 		560, -- 392
 		210, -- 392
-		1, -- 392
-		C_GOLD -- 392
+		3, -- 392
+		C_GOLD_DARK -- 392
 	) -- 392
-	drawCorners( -- 393
+	drawBand( -- 393
 		d, -- 393
 		0, -- 393
 		320, -- 393
 		560, -- 393
 		210, -- 393
-		14, -- 393
-		8, -- 393
-		C_GOLD_BRIGHT -- 393
+		1, -- 393
+		C_GOLD -- 393
 	) -- 393
-	d:addTo(self.screenLayer) -- 394
-	makeLabel( -- 396
-		self.screenLayer, -- 396
-		"灵 术 牌", -- 396
-		0, -- 396
-		350, -- 396
-		56, -- 396
-		C_GOLD_TEXT -- 396
-	) -- 396
+	drawCorners( -- 394
+		d, -- 394
+		0, -- 394
+		320, -- 394
+		560, -- 394
+		210, -- 394
+		14, -- 394
+		8, -- 394
+		C_GOLD_BRIGHT -- 394
+	) -- 394
+	d:addTo(self.screenLayer) -- 395
 	makeLabel( -- 397
 		self.screenLayer, -- 397
-		"暗 影 术 法", -- 397
+		"灵 术 牌", -- 397
 		0, -- 397
-		268, -- 397
-		20, -- 397
-		C_TEXT_DIM -- 397
+		350, -- 397
+		56, -- 397
+		C_GOLD_TEXT -- 397
 	) -- 397
-	self:makeButton( -- 399
-		{x = 0, y = 40, w = 300, h = 70}, -- 399
-		"开始游戏", -- 399
-		{188, 160, 234, 255}, -- 399
-		{116, 90, 156, 255}, -- 399
-		Color(30, 20, 44, 255), -- 399
-		function() -- 399
-			self.screen = "levels" -- 399
-			self:refresh() -- 399
-		end, -- 399
-		self.screenLayer, -- 399
-		26 -- 399
-	) -- 399
+	makeLabel( -- 398
+		self.screenLayer, -- 398
+		"暗 影 术 法", -- 398
+		0, -- 398
+		268, -- 398
+		20, -- 398
+		C_TEXT_DIM -- 398
+	) -- 398
 	self:makeButton( -- 400
-		{x = 0, y = -60, w = 300, h = 70}, -- 400
-		"设置", -- 400
-		{132, 106, 172, 255}, -- 400
-		{74, 55, 100, 255}, -- 400
-		Color(234, 226, 250, 255), -- 400
+		{x = 0, y = 40, w = 300, h = 70}, -- 400
+		"开始游戏", -- 400
+		{188, 160, 234, 255}, -- 400
+		{116, 90, 156, 255}, -- 400
+		Color(30, 20, 44, 255), -- 400
 		function() -- 400
-			self.settingsBack = "menu" -- 400
-			self.screen = "settings" -- 400
+			self.screen = "levels" -- 400
 			self:refresh() -- 400
 		end, -- 400
 		self.screenLayer, -- 400
 		26 -- 400
 	) -- 400
 	self:makeButton( -- 401
-		{x = 0, y = -160, w = 300, h = 70}, -- 401
-		"退出游戏", -- 401
-		{96, 74, 118, 255}, -- 401
-		{52, 40, 66, 255}, -- 401
-		Color(226, 216, 240, 255), -- 401
+		{x = 0, y = -60, w = 300, h = 70}, -- 401
+		"设置", -- 401
+		{132, 106, 172, 255}, -- 401
+		{74, 55, 100, 255}, -- 401
+		Color(234, 226, 250, 255), -- 401
 		function() -- 401
-			App:shutdown() -- 401
+			self.settingsBack = "menu" -- 401
+			self.screen = "settings" -- 401
+			self:refresh() -- 401
 		end, -- 401
 		self.screenLayer, -- 401
 		26 -- 401
 	) -- 401
-end -- 388
-function GameUI.prototype.renderSettings(self) -- 404
-	local d = DrawNode() -- 405
-	drawGrad( -- 406
-		d, -- 406
-		0, -- 406
-		20, -- 406
-		620, -- 406
-		540, -- 406
-		{50, 38, 68, 255}, -- 406
-		{22, 17, 32, 255} -- 406
-	) -- 406
-	drawBand( -- 407
+	self:makeButton( -- 402
+		{x = 0, y = -160, w = 300, h = 70}, -- 402
+		"退出游戏", -- 402
+		{96, 74, 118, 255}, -- 402
+		{52, 40, 66, 255}, -- 402
+		Color(226, 216, 240, 255), -- 402
+		function() -- 402
+			App:shutdown() -- 402
+		end, -- 402
+		self.screenLayer, -- 402
+		26 -- 402
+	) -- 402
+end -- 389
+function GameUI.prototype.renderSettings(self) -- 405
+	local d = DrawNode() -- 406
+	drawGrad( -- 407
 		d, -- 407
 		0, -- 407
 		20, -- 407
 		620, -- 407
 		540, -- 407
-		3, -- 407
-		C_GOLD_DARK -- 407
+		{50, 38, 68, 255}, -- 407
+		{22, 17, 32, 255} -- 407
 	) -- 407
 	drawBand( -- 408
 		d, -- 408
@@ -797,127 +784,127 @@ function GameUI.prototype.renderSettings(self) -- 404
 		20, -- 408
 		620, -- 408
 		540, -- 408
-		1, -- 408
-		C_GOLD -- 408
+		3, -- 408
+		C_GOLD_DARK -- 408
 	) -- 408
-	drawCorners( -- 409
+	drawBand( -- 409
 		d, -- 409
 		0, -- 409
 		20, -- 409
 		620, -- 409
 		540, -- 409
-		14, -- 409
-		8, -- 409
-		C_GOLD_BRIGHT -- 409
+		1, -- 409
+		C_GOLD -- 409
 	) -- 409
-	d:addTo(self.screenLayer) -- 410
-	makeLabel( -- 412
-		self.screenLayer, -- 412
-		"设 置", -- 412
-		0, -- 412
-		220, -- 412
-		38, -- 412
-		C_GOLD_TEXT -- 412
-	) -- 412
-	self:renderVolumeRow( -- 413
-		90, -- 413
-		"背景音乐", -- 413
-		self.bgmVolume, -- 413
-		function(delta) return self:changeBgmVolume(delta) end -- 413
+	drawCorners( -- 410
+		d, -- 410
+		0, -- 410
+		20, -- 410
+		620, -- 410
+		540, -- 410
+		14, -- 410
+		8, -- 410
+		C_GOLD_BRIGHT -- 410
+	) -- 410
+	d:addTo(self.screenLayer) -- 411
+	makeLabel( -- 413
+		self.screenLayer, -- 413
+		"设 置", -- 413
+		0, -- 413
+		220, -- 413
+		38, -- 413
+		C_GOLD_TEXT -- 413
 	) -- 413
 	self:renderVolumeRow( -- 414
-		-40, -- 414
-		"音效", -- 414
-		self.sfxVolume, -- 414
-		function(delta) return self:changeSfxVolume(delta) end -- 414
+		90, -- 414
+		"背景音乐", -- 414
+		self.bgmVolume, -- 414
+		function(delta) return self:changeBgmVolume(delta) end -- 414
 	) -- 414
-	self:makeButton( -- 416
-		{x = 0, y = -200, w = 260, h = 64}, -- 416
-		"返回", -- 416
-		{132, 106, 172, 255}, -- 416
-		{74, 55, 100, 255}, -- 416
-		Color(234, 226, 250, 255), -- 416
-		function() -- 416
-			self.screen = self.settingsBack -- 416
-			self:refresh() -- 416
-		end, -- 416
-		self.screenLayer, -- 416
-		24 -- 416
-	) -- 416
-end -- 404
-function GameUI.prototype.renderVolumeRow(self, y, label, value, onChange) -- 419
-	local d = DrawNode() -- 420
-	d:drawPolygon( -- 421
-		rectVerts(0, y, 360, 16), -- 421
-		Color(22, 17, 32, 255), -- 421
-		1, -- 421
-		C_GOLD_DARK -- 421
-	) -- 421
-	local bar = 360 * value -- 422
-	if bar > 2 then -- 422
-		d:drawPolygon( -- 423
-			rectVerts(-180 + bar / 2, y, bar, 16), -- 423
-			C_GOLD, -- 423
-			0 -- 423
-		) -- 423
-	end -- 423
-	d:addTo(self.screenLayer) -- 424
-	makeLabel( -- 426
-		self.screenLayer, -- 426
-		((label .. "  ") .. tostring(math.floor(value * 100 + 0.5))) .. "%", -- 426
-		0, -- 426
-		y + 52, -- 426
-		24, -- 426
-		C_TEXT -- 426
-	) -- 426
-	self:makeButton( -- 427
-		{x = -250, y = y, w = 64, h = 56}, -- 427
-		"−", -- 427
-		{150, 124, 190, 255}, -- 427
-		{86, 66, 112, 255}, -- 427
-		Color(236, 228, 252, 255), -- 427
-		function() return onChange(-0.1) end, -- 427
+	self:renderVolumeRow( -- 415
+		-40, -- 415
+		"音效", -- 415
+		self.sfxVolume, -- 415
+		function(delta) return self:changeSfxVolume(delta) end -- 415
+	) -- 415
+	self:makeButton( -- 417
+		{x = 0, y = -200, w = 260, h = 64}, -- 417
+		"返回", -- 417
+		{132, 106, 172, 255}, -- 417
+		{74, 55, 100, 255}, -- 417
+		Color(234, 226, 250, 255), -- 417
+		function() -- 417
+			self.screen = self.settingsBack -- 417
+			self:refresh() -- 417
+		end, -- 417
+		self.screenLayer, -- 417
+		24 -- 417
+	) -- 417
+end -- 405
+function GameUI.prototype.renderVolumeRow(self, y, label, value, onChange) -- 420
+	local d = DrawNode() -- 421
+	d:drawPolygon( -- 422
+		rectVerts(0, y, 360, 16), -- 422
+		Color(22, 17, 32, 255), -- 422
+		1, -- 422
+		C_GOLD_DARK -- 422
+	) -- 422
+	local bar = 360 * value -- 423
+	if bar > 2 then -- 423
+		d:drawPolygon( -- 424
+			rectVerts(-180 + bar / 2, y, bar, 16), -- 424
+			C_GOLD, -- 424
+			0 -- 424
+		) -- 424
+	end -- 424
+	d:addTo(self.screenLayer) -- 425
+	makeLabel( -- 427
 		self.screenLayer, -- 427
-		28 -- 427
+		((label .. "  ") .. tostring(math.floor(value * 100 + 0.5))) .. "%", -- 427
+		0, -- 427
+		y + 52, -- 427
+		24, -- 427
+		C_TEXT -- 427
 	) -- 427
 	self:makeButton( -- 428
-		{x = 250, y = y, w = 64, h = 56}, -- 428
-		"+", -- 428
+		{x = -250, y = y, w = 64, h = 56}, -- 428
+		"−", -- 428
 		{150, 124, 190, 255}, -- 428
 		{86, 66, 112, 255}, -- 428
 		Color(236, 228, 252, 255), -- 428
-		function() return onChange(0.1) end, -- 428
+		function() return onChange(-0.1) end, -- 428
 		self.screenLayer, -- 428
 		28 -- 428
 	) -- 428
-end -- 419
-function GameUI.prototype.renderLevels(self) -- 431
-	local maxLevel = GameDataManager.MAX_LEVEL -- 432
-	local unlocked = self.mgr.state.highestLevel -- 433
-	if unlocked < 1 then -- 433
-		unlocked = 1 -- 434
-	end -- 434
-	if unlocked > maxLevel then -- 434
-		unlocked = maxLevel -- 435
+	self:makeButton( -- 429
+		{x = 250, y = y, w = 64, h = 56}, -- 429
+		"+", -- 429
+		{150, 124, 190, 255}, -- 429
+		{86, 66, 112, 255}, -- 429
+		Color(236, 228, 252, 255), -- 429
+		function() return onChange(0.1) end, -- 429
+		self.screenLayer, -- 429
+		28 -- 429
+	) -- 429
+end -- 420
+function GameUI.prototype.renderLevels(self) -- 432
+	local maxLevel = GameDataManager.MAX_LEVEL -- 433
+	local unlocked = self.mgr.state.highestLevel -- 434
+	if unlocked < 1 then -- 434
+		unlocked = 1 -- 435
 	end -- 435
-	local d = DrawNode() -- 437
-	drawGrad( -- 438
-		d, -- 438
-		0, -- 438
-		0, -- 438
-		660, -- 438
-		960, -- 438
-		{50, 38, 68, 255}, -- 438
-		{22, 17, 32, 255} -- 438
-	) -- 438
-	drawBand( -- 439
+	if unlocked > maxLevel then -- 435
+		unlocked = maxLevel -- 436
+	end -- 436
+	local d = DrawNode() -- 438
+	drawGrad( -- 439
 		d, -- 439
 		0, -- 439
 		0, -- 439
 		660, -- 439
 		960, -- 439
-		3, -- 439
-		C_GOLD_DARK -- 439
+		{50, 38, 68, 255}, -- 439
+		{22, 17, 32, 255} -- 439
 	) -- 439
 	drawBand( -- 440
 		d, -- 440
@@ -925,1031 +912,1125 @@ function GameUI.prototype.renderLevels(self) -- 431
 		0, -- 440
 		660, -- 440
 		960, -- 440
-		1, -- 440
-		C_GOLD -- 440
+		3, -- 440
+		C_GOLD_DARK -- 440
 	) -- 440
-	drawCorners( -- 441
+	drawBand( -- 441
 		d, -- 441
 		0, -- 441
 		0, -- 441
 		660, -- 441
 		960, -- 441
-		14, -- 441
-		8, -- 441
-		C_GOLD_BRIGHT -- 441
+		1, -- 441
+		C_GOLD -- 441
 	) -- 441
-	local cols = {-200, 0, 200} -- 443
-	local rows = { -- 444
-		330, -- 444
-		150, -- 444
-		-30, -- 444
-		-210, -- 444
-		-390 -- 444
-	} -- 444
-	local px = {} -- 445
-	local py = {} -- 446
-	do -- 446
-		local i = 0 -- 447
-		while i < maxLevel do -- 447
-			local row = math.floor(i / 3) -- 448
-			local col = i % 3 -- 449
-			local c = row % 2 == 0 and col or 2 - col -- 450
-			px[#px + 1] = cols[c + 1] -- 451
-			py[#py + 1] = rows[row + 1] -- 452
-			i = i + 1 -- 447
-		end -- 447
-	end -- 447
+	drawCorners( -- 442
+		d, -- 442
+		0, -- 442
+		0, -- 442
+		660, -- 442
+		960, -- 442
+		14, -- 442
+		8, -- 442
+		C_GOLD_BRIGHT -- 442
+	) -- 442
+	local cols = {-200, 0, 200} -- 444
+	local rows = { -- 445
+		330, -- 445
+		150, -- 445
+		-30, -- 445
+		-210, -- 445
+		-390 -- 445
+	} -- 445
+	local px = {} -- 446
+	local py = {} -- 447
 	do -- 447
-		local i = 0 -- 454
-		while i + 1 < maxLevel do -- 454
-			d:drawSegment( -- 455
-				Vec2(px[i + 1], py[i + 1]), -- 455
-				Vec2(px[i + 1 + 1], py[i + 1 + 1]), -- 455
-				3, -- 455
-				C_GOLD_DARK -- 455
-			) -- 455
-			i = i + 1 -- 454
-		end -- 454
-	end -- 454
-	d:addTo(self.screenLayer) -- 457
-	makeLabel( -- 459
-		self.screenLayer, -- 459
-		"选 择 关 卡", -- 459
-		0, -- 459
-		545, -- 459
-		38, -- 459
-		C_GOLD_TEXT -- 459
-	) -- 459
+		local i = 0 -- 448
+		while i < maxLevel do -- 448
+			local row = math.floor(i / 3) -- 449
+			local col = i % 3 -- 450
+			local c = row % 2 == 0 and col or 2 - col -- 451
+			px[#px + 1] = cols[c + 1] -- 452
+			py[#py + 1] = rows[row + 1] -- 453
+			i = i + 1 -- 448
+		end -- 448
+	end -- 448
+	do -- 448
+		local i = 0 -- 455
+		while i + 1 < maxLevel do -- 455
+			d:drawSegment( -- 456
+				Vec2(px[i + 1], py[i + 1]), -- 456
+				Vec2(px[i + 1 + 1], py[i + 1 + 1]), -- 456
+				3, -- 456
+				C_GOLD_DARK -- 456
+			) -- 456
+			i = i + 1 -- 455
+		end -- 455
+	end -- 455
+	d:addTo(self.screenLayer) -- 458
 	makeLabel( -- 460
 		self.screenLayer, -- 460
-		(("共 " .. tostring(maxLevel)) .. " 关 · 已解锁 ") .. tostring(unlocked), -- 460
+		"选 择 关 卡", -- 460
 		0, -- 460
-		498, -- 460
-		22, -- 460
-		C_TEXT_DIM -- 460
+		545, -- 460
+		38, -- 460
+		C_GOLD_TEXT -- 460
 	) -- 460
-	do -- 460
-		local i = 0 -- 462
-		while i < maxLevel do -- 462
-			local lv = i + 1 -- 463
-			local open = lv <= unlocked -- 464
-			local x = px[i + 1] -- 465
-			local y = py[i + 1] -- 466
-			local nd = DrawNode() -- 468
-			if open then -- 468
-				nd:drawDot( -- 470
-					Vec2(x, y), -- 470
-					40, -- 470
-					C_GOLD -- 470
-				) -- 470
+	makeLabel( -- 461
+		self.screenLayer, -- 461
+		(("共 " .. tostring(maxLevel)) .. " 关 · 已解锁 ") .. tostring(unlocked), -- 461
+		0, -- 461
+		498, -- 461
+		22, -- 461
+		C_TEXT_DIM -- 461
+	) -- 461
+	do -- 461
+		local i = 0 -- 463
+		while i < maxLevel do -- 463
+			local lv = i + 1 -- 464
+			local open = lv <= unlocked -- 465
+			local x = px[i + 1] -- 466
+			local y = py[i + 1] -- 467
+			local nd = DrawNode() -- 469
+			if open then -- 469
 				nd:drawDot( -- 471
 					Vec2(x, y), -- 471
-					34, -- 471
-					C_BADGE -- 471
+					40, -- 471
+					C_GOLD -- 471
 				) -- 471
-			else -- 471
-				nd:drawDot( -- 473
-					Vec2(x, y), -- 473
-					40, -- 473
-					Color(58, 48, 74, 255) -- 473
-				) -- 473
+				nd:drawDot( -- 472
+					Vec2(x, y), -- 472
+					34, -- 472
+					C_BADGE -- 472
+				) -- 472
+			else -- 472
 				nd:drawDot( -- 474
 					Vec2(x, y), -- 474
-					34, -- 474
-					Color(26, 20, 34, 255) -- 474
+					40, -- 474
+					Color(58, 48, 74, 255) -- 474
 				) -- 474
-			end -- 474
-			nd:addTo(self.screenLayer) -- 476
-			makeLabel( -- 477
-				self.screenLayer, -- 477
-				"" .. tostring(lv), -- 477
-				x, -- 477
-				y, -- 477
-				open and 26 or 22, -- 477
-				open and C_GOLD_TEXT or Color(104, 94, 120, 255) -- 477
-			) -- 477
-			if open then -- 477
-				local hit = Node() -- 480
-				hit.position = Vec2(x, y) -- 481
-				hit.size = Size(84, 84) -- 482
-				hit.anchor = Vec2(0.5, 0.5) -- 483
-				hit.touchEnabled = true -- 484
-				hit:onTapped(function() return self:startLevelAt(lv) end) -- 485
-				hit:addTo(self.screenLayer) -- 486
-			end -- 486
-			i = i + 1 -- 462
-		end -- 462
-	end -- 462
-	self:makeButton( -- 490
-		{x = 0, y = -560, w = 240, h = 62}, -- 490
-		"返回", -- 490
-		{132, 106, 172, 255}, -- 490
-		{74, 55, 100, 255}, -- 490
-		Color(234, 226, 250, 255), -- 490
-		function() -- 490
-			self.screen = "menu" -- 490
-			self:refresh() -- 490
-		end, -- 490
-		self.screenLayer, -- 490
-		24 -- 490
-	) -- 490
-end -- 431
-function GameUI.prototype.startLevelAt(self, level) -- 494
-	self.mgr:startLevel(level) -- 495
-	self.rewardsApplied = false -- 496
-	self.lastReward = nil -- 497
-	self.selectedCardId = nil -- 498
-	self.metaOpen = false -- 499
-	self.metaMessage = "" -- 500
-	self.screen = "game" -- 501
-	self:refresh() -- 502
-end -- 494
-function GameUI.prototype.changeBgmVolume(self, delta) -- 505
-	local v = self.bgmVolume + delta -- 506
-	if v < 0 then -- 506
-		v = 0 -- 507
-	end -- 507
-	if v > 1 then -- 507
-		v = 1 -- 508
-	end -- 508
-	self.bgmVolume = v -- 509
-	if self.bgmSource then -- 509
-		self.bgmSource.volume = v -- 510
+				nd:drawDot( -- 475
+					Vec2(x, y), -- 475
+					34, -- 475
+					Color(26, 20, 34, 255) -- 475
+				) -- 475
+			end -- 475
+			nd:addTo(self.screenLayer) -- 477
+			makeLabel( -- 478
+				self.screenLayer, -- 478
+				"" .. tostring(lv), -- 478
+				x, -- 478
+				y, -- 478
+				open and 26 or 22, -- 478
+				open and C_GOLD_TEXT or Color(104, 94, 120, 255) -- 478
+			) -- 478
+			if open then -- 478
+				local hit = Node() -- 481
+				hit.position = Vec2(x, y) -- 482
+				hit.size = Size(84, 84) -- 483
+				hit.anchor = Vec2(0.5, 0.5) -- 484
+				hit.touchEnabled = true -- 485
+				hit:onTapped(function() return self:startLevelAt(lv) end) -- 486
+				hit:addTo(self.screenLayer) -- 487
+			end -- 487
+			i = i + 1 -- 463
+		end -- 463
+	end -- 463
+	self:makeButton( -- 491
+		{x = -140, y = -560, w = 220, h = 62}, -- 491
+		"养成", -- 491
+		{132, 106, 172, 255}, -- 491
+		{74, 55, 100, 255}, -- 491
+		Color(234, 226, 250, 255), -- 491
+		function() -- 491
+			self.metaMessage = "" -- 491
+			self.screen = "meta" -- 491
+			self:refresh() -- 491
+		end, -- 491
+		self.screenLayer, -- 491
+		24 -- 491
+	) -- 491
+	self:makeButton( -- 492
+		{x = 140, y = -560, w = 220, h = 62}, -- 492
+		"返回", -- 492
+		{132, 106, 172, 255}, -- 492
+		{74, 55, 100, 255}, -- 492
+		Color(234, 226, 250, 255), -- 492
+		function() -- 492
+			self.screen = "menu" -- 492
+			self:refresh() -- 492
+		end, -- 492
+		self.screenLayer, -- 492
+		24 -- 492
+	) -- 492
+end -- 432
+function GameUI.prototype.startLevelAt(self, level) -- 496
+	self.mgr:startLevel(level) -- 497
+	self.rewardsApplied = false -- 498
+	self.lastReward = nil -- 499
+	self.selectedCardId = nil -- 500
+	self.metaOpen = false -- 501
+	self.metaMessage = "" -- 502
+	self.screen = "game" -- 503
+	self:refresh() -- 504
+end -- 496
+function GameUI.prototype.changeBgmVolume(self, delta) -- 507
+	local v = self.bgmVolume + delta -- 508
+	if v < 0 then -- 508
+		v = 0 -- 509
+	end -- 509
+	if v > 1 then -- 509
+		v = 1 -- 510
 	end -- 510
-	self.save.bgmVolume = v -- 511
-	self.save:save() -- 512
-	self:refresh() -- 513
-end -- 505
-function GameUI.prototype.changeSfxVolume(self, delta) -- 516
-	local v = self.sfxVolume + delta -- 517
-	if v < 0 then -- 517
-		v = 0 -- 518
-	end -- 518
-	if v > 1 then -- 518
-		v = 1 -- 519
-	end -- 519
-	self.sfxVolume = v -- 520
-	self.save.sfxVolume = v -- 521
-	self.save:save() -- 522
-	self:refresh() -- 523
-end -- 516
-function GameUI.prototype.syncProgress(self) -- 527
-	local st = self.mgr.state.status -- 528
-	if st == "won" or st == "complete" then -- 528
-		local next = self.mgr.state.level + 1 -- 530
-		if next > GameDataManager.MAX_LEVEL then -- 530
-			next = GameDataManager.MAX_LEVEL -- 531
-		end -- 531
-		self.mgr:unlockLevel(next) -- 532
-	end -- 532
-	local hl = self.mgr.state.highestLevel -- 534
-	if hl > self.save.highestLevel then -- 534
-		self.save.highestLevel = hl -- 536
-		self.save:save() -- 537
-	end -- 537
-end -- 527
-function GameUI.prototype.renderHud(self) -- 541
-	self.hudLayer:removeAllChildren() -- 542
-	local s = self.mgr.state -- 543
-	makeLabel( -- 544
-		self.hudLayer, -- 544
-		(("生命 " .. tostring(s.hp)) .. "/") .. tostring(s.maxHp), -- 544
-		-280, -- 544
-		585, -- 544
-		24, -- 544
-		s.hp <= 1 and C_DANGER or C_TEXT -- 545
-	) -- 545
+	self.bgmVolume = v -- 511
+	if self.bgmSource then -- 511
+		self.bgmSource.volume = v -- 512
+	end -- 512
+	self.save.bgmVolume = v -- 513
+	self.save:save() -- 514
+	self:refresh() -- 515
+end -- 507
+function GameUI.prototype.changeSfxVolume(self, delta) -- 518
+	local v = self.sfxVolume + delta -- 519
+	if v < 0 then -- 519
+		v = 0 -- 520
+	end -- 520
+	if v > 1 then -- 520
+		v = 1 -- 521
+	end -- 521
+	self.sfxVolume = v -- 522
+	self.save.sfxVolume = v -- 523
+	self.save:save() -- 524
+	self:refresh() -- 525
+end -- 518
+function GameUI.prototype.syncProgress(self) -- 529
+	local st = self.mgr.state.status -- 530
+	if st == "won" or st == "complete" then -- 530
+		local next = self.mgr.state.level + 1 -- 532
+		if next > GameDataManager.MAX_LEVEL then -- 532
+			next = GameDataManager.MAX_LEVEL -- 533
+		end -- 533
+		self.mgr:unlockLevel(next) -- 534
+	end -- 534
+	local hl = self.mgr.state.highestLevel -- 536
+	if hl > self.save.highestLevel then -- 536
+		self.save.highestLevel = hl -- 538
+		self.save:save() -- 539
+	end -- 539
+end -- 529
+function GameUI.prototype.renderHud(self) -- 543
+	self.hudLayer:removeAllChildren() -- 544
+	local s = self.mgr.state -- 545
 	makeLabel( -- 546
 		self.hudLayer, -- 546
-		("第 " .. tostring(s.level)) .. " 关", -- 546
-		0, -- 546
+		(("生命 " .. tostring(s.hp)) .. "/") .. tostring(s.maxHp), -- 546
+		-280, -- 546
 		585, -- 546
-		26, -- 546
-		C_TEXT -- 546
-	) -- 546
-	makeLabel( -- 547
-		self.hudLayer, -- 547
-		((("需消除 " .. tostring(s.eliminatedCount)) .. "/") .. tostring(s.targetCount)) .. " 张", -- 547
-		0, -- 547
-		545, -- 547
-		18, -- 547
-		C_TEXT_DIM -- 547
+		24, -- 546
+		s.hp <= 1 and C_DANGER or C_TEXT -- 547
 	) -- 547
 	makeLabel( -- 548
 		self.hudLayer, -- 548
-		"回合 " .. tostring(s.turn), -- 548
-		120, -- 548
+		("第 " .. tostring(s.level)) .. " 关", -- 548
+		0, -- 548
 		585, -- 548
-		22, -- 548
+		26, -- 548
 		C_TEXT -- 548
 	) -- 548
-	local hint = self.hintText ~= "" and self.hintText or "拖硬币到卡牌 · 点硬币切换正负 · 点卡牌后确定" -- 550
-	makeLabel( -- 551
-		self.hudLayer, -- 551
-		hint, -- 551
-		0, -- 551
-		498, -- 551
-		22, -- 551
-		self.hintText ~= "" and C_DANGER or C_GOLD_TEXT -- 551
-	) -- 551
-end -- 541
-function GameUI.prototype.renderCards(self) -- 554
-	self.cardLayer:removeAllChildren() -- 555
-	self.cardRects = {} -- 556
-	local cards = self.mgr.state.cards -- 557
-	local gridW = CARD_COLS * CARD_W + (CARD_COLS - 1) * CARD_GAP_X -- 558
-	local gridH = CARD_ROWS * CARD_H + (CARD_ROWS - 1) * CARD_GAP_Y -- 559
-	local startX = -gridW / 2 + CARD_W / 2 -- 560
-	local startY = 250 + gridH / 2 - CARD_H / 2 -- 561
-	local maxCards = CARD_COLS * CARD_ROWS -- 562
-	do -- 562
-		local i = 0 -- 564
-		while i < #cards and i < maxCards do -- 564
-			local card = cards[i + 1] -- 565
-			local col = i % CARD_COLS -- 566
-			local row = math.floor(i / CARD_COLS) -- 567
-			local x = startX + col * (CARD_W + CARD_GAP_X) -- 568
-			local y = startY - row * (CARD_H + CARD_GAP_Y) -- 569
-			self:buildCard(card, x, y) -- 570
-			i = i + 1 -- 564
-		end -- 564
-	end -- 564
-end -- 554
-function GameUI.prototype.buildCard(self, card, x, y) -- 575
-	local ____self_cardRects_0 = self.cardRects -- 575
-	____self_cardRects_0[#____self_cardRects_0 + 1] = { -- 576
-		id = card.id, -- 576
-		x = x, -- 576
-		y = y, -- 576
-		w = CARD_W, -- 576
-		h = CARD_H -- 576
-	} -- 576
-	local hit = Node() -- 579
-	hit.position = Vec2(x, y) -- 580
-	hit.size = Size(CARD_W, CARD_H) -- 581
-	hit.anchor = Vec2(0.5, 0.5) -- 582
-	hit.touchEnabled = true -- 583
-	hit:onTapped(function() -- 584
-		self.selectedCardId = card.id -- 585
-		self.hintText = "" -- 586
-		self:refresh() -- 587
-	end) -- 584
-	hit:addTo(self.cardLayer) -- 589
-	local node = Node() -- 591
-	node.position = Vec2(x, y) -- 592
-	local selected = card.id == self.selectedCardId -- 594
-	local border = selected and C_GOLD_BRIGHT or C_GOLD -- 595
-	local borderW = selected and 4 or 3 -- 596
-	local d = DrawNode() -- 598
-	if selected then -- 598
-		drawGrad( -- 601
-			d, -- 601
-			0, -- 601
-			0, -- 601
-			CARD_W, -- 601
-			CARD_H, -- 601
-			{90, 70, 122, 255}, -- 601
-			{46, 35, 64, 255} -- 601
-		) -- 601
-	else -- 601
+	makeLabel( -- 549
+		self.hudLayer, -- 549
+		((("需消除 " .. tostring(s.eliminatedCount)) .. "/") .. tostring(s.targetCount)) .. " 张", -- 549
+		0, -- 549
+		545, -- 549
+		18, -- 549
+		C_TEXT_DIM -- 549
+	) -- 549
+	makeLabel( -- 550
+		self.hudLayer, -- 550
+		"回合 " .. tostring(s.turn), -- 550
+		120, -- 550
+		585, -- 550
+		22, -- 550
+		C_TEXT -- 550
+	) -- 550
+	local hint = self.hintText ~= "" and self.hintText or "拖硬币到卡牌 · 点硬币切换正负 · 结束回合自动消除" -- 552
+	makeLabel( -- 553
+		self.hudLayer, -- 553
+		hint, -- 553
+		0, -- 553
+		498, -- 553
+		22, -- 553
+		self.hintText ~= "" and C_DANGER or C_GOLD_TEXT -- 553
+	) -- 553
+end -- 543
+function GameUI.prototype.renderCards(self) -- 556
+	self.cardLayer:removeAllChildren() -- 557
+	self.cardRects = {} -- 558
+	local cards = self.mgr.state.cards -- 559
+	local gridW = CARD_COLS * CARD_W + (CARD_COLS - 1) * CARD_GAP_X -- 560
+	local gridH = CARD_ROWS * CARD_H + (CARD_ROWS - 1) * CARD_GAP_Y -- 561
+	local startX = -gridW / 2 + CARD_W / 2 -- 562
+	local startY = 250 + gridH / 2 - CARD_H / 2 -- 563
+	local maxCards = CARD_COLS * CARD_ROWS -- 564
+	do -- 564
+		local i = 0 -- 566
+		while i < #cards and i < maxCards do -- 566
+			local card = cards[i + 1] -- 567
+			local col = i % CARD_COLS -- 568
+			local row = math.floor(i / CARD_COLS) -- 569
+			local x = startX + col * (CARD_W + CARD_GAP_X) -- 570
+			local y = startY - row * (CARD_H + CARD_GAP_Y) -- 571
+			self:buildCard(card, x, y) -- 572
+			i = i + 1 -- 566
+		end -- 566
+	end -- 566
+end -- 556
+function GameUI.prototype.buildCard(self, card, x, y) -- 577
+	local ____self_cardRects_0 = self.cardRects -- 577
+	____self_cardRects_0[#____self_cardRects_0 + 1] = { -- 578
+		id = card.id, -- 578
+		x = x, -- 578
+		y = y, -- 578
+		w = CARD_W, -- 578
+		h = CARD_H -- 578
+	} -- 578
+	local hit = Node() -- 581
+	hit.position = Vec2(x, y) -- 582
+	hit.size = Size(CARD_W, CARD_H) -- 583
+	hit.anchor = Vec2(0.5, 0.5) -- 584
+	hit.touchEnabled = true -- 585
+	hit:onTapped(function() -- 586
+		self.selectedCardId = card.id -- 587
+		self.hintText = "" -- 588
+		self:refresh() -- 589
+	end) -- 586
+	hit:addTo(self.cardLayer) -- 591
+	local node = Node() -- 593
+	node.position = Vec2(x, y) -- 594
+	local selected = card.id == self.selectedCardId -- 596
+	local border = selected and C_GOLD_BRIGHT or C_GOLD -- 597
+	local borderW = selected and 4 or 3 -- 598
+	local d = DrawNode() -- 600
+	if selected then -- 600
 		drawGrad( -- 603
 			d, -- 603
 			0, -- 603
 			0, -- 603
 			CARD_W, -- 603
 			CARD_H, -- 603
-			{58, 44, 78, 255}, -- 603
-			{28, 21, 40, 255} -- 603
+			{90, 70, 122, 255}, -- 603
+			{46, 35, 64, 255} -- 603
 		) -- 603
-	end -- 603
-	drawBand( -- 605
-		d, -- 605
-		0, -- 605
-		0, -- 605
-		CARD_W, -- 605
-		CARD_H, -- 605
-		borderW, -- 605
-		border -- 605
-	) -- 605
-	drawBand( -- 606
-		d, -- 606
-		0, -- 606
-		0, -- 606
-		CARD_W - 12, -- 606
-		CARD_H - 12, -- 606
-		1, -- 606
-		selected and C_GOLD_BRIGHT or C_GOLD_DARK -- 606
-	) -- 606
-	drawCorners( -- 607
+	else -- 603
+		drawGrad( -- 605
+			d, -- 605
+			0, -- 605
+			0, -- 605
+			CARD_W, -- 605
+			CARD_H, -- 605
+			{58, 44, 78, 255}, -- 605
+			{28, 21, 40, 255} -- 605
+		) -- 605
+	end -- 605
+	drawBand( -- 607
 		d, -- 607
 		0, -- 607
 		0, -- 607
 		CARD_W, -- 607
 		CARD_H, -- 607
-		14, -- 607
-		7, -- 607
-		C_GOLD_BRIGHT -- 607
+		borderW, -- 607
+		border -- 607
 	) -- 607
-	d:drawDot( -- 609
-		Vec2(74, 104), -- 609
-		25, -- 609
-		C_GOLD -- 609
+	drawBand( -- 608
+		d, -- 608
+		0, -- 608
+		0, -- 608
+		CARD_W - 12, -- 608
+		CARD_H - 12, -- 608
+		1, -- 608
+		selected and C_GOLD_BRIGHT or C_GOLD_DARK -- 608
+	) -- 608
+	drawCorners( -- 609
+		d, -- 609
+		0, -- 609
+		0, -- 609
+		CARD_W, -- 609
+		CARD_H, -- 609
+		14, -- 609
+		7, -- 609
+		C_GOLD_BRIGHT -- 609
 	) -- 609
-	d:drawDot( -- 610
-		Vec2(74, 104), -- 610
-		21, -- 610
-		C_BADGE -- 610
-	) -- 610
-	d:addTo(node) -- 611
-	makeLabel( -- 614
-		node, -- 614
-		"" .. tostring(card.target), -- 614
-		0, -- 614
-		52, -- 614
-		72, -- 614
-		C_TEXT -- 614
-	) -- 614
-	makeLabel( -- 615
-		node, -- 615
-		"目标", -- 615
-		0, -- 615
-		112, -- 615
-		16, -- 615
-		C_TEXT_DIM -- 615
-	) -- 615
-	makeLabel( -- 618
-		node, -- 618
-		"" .. tostring(card.countdown), -- 618
-		74, -- 618
-		104, -- 618
-		22, -- 618
-		card.countdown <= 1 and C_DANGER or C_TEXT -- 619
-	) -- 619
+	d:drawDot( -- 611
+		Vec2(74, 104), -- 611
+		25, -- 611
+		C_GOLD -- 611
+	) -- 611
+	d:drawDot( -- 612
+		Vec2(74, 104), -- 612
+		21, -- 612
+		C_BADGE -- 612
+	) -- 612
+	d:addTo(node) -- 613
+	makeLabel( -- 616
+		node, -- 616
+		"" .. tostring(card.target), -- 616
+		0, -- 616
+		52, -- 616
+		72, -- 616
+		C_TEXT -- 616
+	) -- 616
+	makeLabel( -- 617
+		node, -- 617
+		"目标", -- 617
+		0, -- 617
+		112, -- 617
+		16, -- 617
+		C_TEXT_DIM -- 617
+	) -- 617
 	makeLabel( -- 620
 		node, -- 620
-		"回合", -- 620
+		"" .. tostring(card.countdown), -- 620
 		74, -- 620
-		132, -- 620
-		11, -- 620
-		C_TEXT_DIM -- 620
-	) -- 620
-	local bx = -92 -- 623
-	local by = 112 -- 624
-	if card.target ~= card.originalTarget then -- 624
-		d:drawDot( -- 626
-			Vec2(bx, by), -- 626
-			12, -- 626
-			coinColor(CoinType.Discount) -- 626
-		) -- 626
-		makeLabel( -- 627
-			node, -- 627
-			"折", -- 627
-			bx, -- 627
-			by, -- 627
-			12, -- 627
-			C_TEXT -- 627
-		) -- 627
-		bx = bx + 26 -- 628
-	end -- 628
-	if card.frozen then -- 628
-		d:drawDot( -- 631
-			Vec2(bx, by), -- 631
-			12, -- 631
-			coinColor(CoinType.Freeze) -- 631
-		) -- 631
-		makeLabel( -- 632
-			node, -- 632
-			"冻", -- 632
-			bx, -- 632
-			by, -- 632
-			12, -- 632
-			C_TEXT -- 632
-		) -- 632
-		bx = bx + 26 -- 633
-	end -- 633
-	if card.healAmount > 0 then -- 633
-		d:drawDot( -- 636
-			Vec2(bx, by), -- 636
-			12, -- 636
-			coinColor(CoinType.Heal) -- 636
-		) -- 636
-		makeLabel( -- 637
-			node, -- 637
-			"回", -- 637
-			bx, -- 637
-			by, -- 637
-			12, -- 637
-			C_TEXT -- 637
-		) -- 637
-		bx = bx + 26 -- 638
-	end -- 638
-	if card.copyArmed then -- 638
-		d:drawDot( -- 641
-			Vec2(bx, by), -- 641
-			12, -- 641
-			coinColor(CoinType.Copy) -- 641
-		) -- 641
-		makeLabel( -- 642
-			node, -- 642
-			"复", -- 642
-			bx, -- 642
-			by, -- 642
-			12, -- 642
-			C_TEXT -- 642
-		) -- 642
-		bx = bx + 26 -- 643
-	end -- 643
-	local eq = self:equationText(card) -- 647
-	makeLabel( -- 648
-		node, -- 648
-		eq, -- 648
-		0, -- 648
-		-22, -- 648
-		20, -- 648
-		eq == "算式：0" and C_TEXT_DIM or C_TEXT -- 648
-	) -- 648
-	node:addTo(self.cardLayer) -- 650
-	local n = #card.coins -- 653
-	local chipGap = n > 1 and math.min(46, (CARD_W - 44) / (n - 1)) or 0 -- 654
-	do -- 654
-		local i = 0 -- 655
-		while i < n do -- 655
-			local pc = card.coins[i + 1] -- 656
-			local idx = i -- 657
-			local chipX = (i - (n - 1) / 2) * chipGap -- 658
-			local chipY = -100 -- 659
-			d:drawDot( -- 660
-				Vec2(chipX, chipY), -- 660
-				18, -- 660
-				coinColor(pc.type) -- 660
-			) -- 660
-			d:drawDot( -- 661
-				Vec2(chipX, chipY), -- 661
-				13, -- 661
-				C_BADGE -- 661
-			) -- 661
-			makeLabel( -- 662
-				node, -- 662
-				self:opSymbol(pc.op) .. tostring(pc.value), -- 662
-				chipX, -- 662
-				chipY, -- 662
-				17, -- 662
-				C_TEXT -- 662
+		104, -- 620
+		22, -- 620
+		card.countdown <= 1 and C_DANGER or C_TEXT -- 621
+	) -- 621
+	makeLabel( -- 622
+		node, -- 622
+		"回合", -- 622
+		74, -- 622
+		132, -- 622
+		11, -- 622
+		C_TEXT_DIM -- 622
+	) -- 622
+	local bx = -92 -- 625
+	local by = 112 -- 626
+	if card.target ~= card.originalTarget then -- 626
+		d:drawDot( -- 628
+			Vec2(bx, by), -- 628
+			12, -- 628
+			coinColor(CoinType.Discount) -- 628
+		) -- 628
+		makeLabel( -- 629
+			node, -- 629
+			"折", -- 629
+			bx, -- 629
+			by, -- 629
+			12, -- 629
+			C_TEXT -- 629
+		) -- 629
+		bx = bx + 26 -- 630
+	end -- 630
+	if card.frozen then -- 630
+		d:drawDot( -- 633
+			Vec2(bx, by), -- 633
+			12, -- 633
+			coinColor(CoinType.Freeze) -- 633
+		) -- 633
+		makeLabel( -- 634
+			node, -- 634
+			"冻", -- 634
+			bx, -- 634
+			by, -- 634
+			12, -- 634
+			C_TEXT -- 634
+		) -- 634
+		bx = bx + 26 -- 635
+	end -- 635
+	if card.healAmount > 0 then -- 635
+		d:drawDot( -- 638
+			Vec2(bx, by), -- 638
+			12, -- 638
+			coinColor(CoinType.Heal) -- 638
+		) -- 638
+		makeLabel( -- 639
+			node, -- 639
+			"回", -- 639
+			bx, -- 639
+			by, -- 639
+			12, -- 639
+			C_TEXT -- 639
+		) -- 639
+		bx = bx + 26 -- 640
+	end -- 640
+	if card.copyArmed then -- 640
+		d:drawDot( -- 643
+			Vec2(bx, by), -- 643
+			12, -- 643
+			coinColor(CoinType.Copy) -- 643
+		) -- 643
+		makeLabel( -- 644
+			node, -- 644
+			"复", -- 644
+			bx, -- 644
+			by, -- 644
+			12, -- 644
+			C_TEXT -- 644
+		) -- 644
+		bx = bx + 26 -- 645
+	end -- 645
+	local eq = self:equationText(card) -- 649
+	makeLabel( -- 650
+		node, -- 650
+		eq, -- 650
+		0, -- 650
+		-22, -- 650
+		20, -- 650
+		eq == "算式：0" and C_TEXT_DIM or C_TEXT -- 650
+	) -- 650
+	node:addTo(self.cardLayer) -- 652
+	local n = #card.coins -- 655
+	local chipGap = n > 1 and math.min(46, (CARD_W - 44) / (n - 1)) or 0 -- 656
+	do -- 656
+		local i = 0 -- 657
+		while i < n do -- 657
+			local pc = card.coins[i + 1] -- 658
+			local idx = i -- 659
+			local chipX = (i - (n - 1) / 2) * chipGap -- 660
+			local chipY = -100 -- 661
+			d:drawDot( -- 662
+				Vec2(chipX, chipY), -- 662
+				18, -- 662
+				coinColor(pc.type) -- 662
 			) -- 662
-			local chip = Node() -- 663
-			chip.position = Vec2(x + chipX, y + chipY) -- 664
-			chip.size = Size(48, 48) -- 665
-			chip.anchor = Vec2(0.5, 0.5) -- 666
-			chip.touchEnabled = true -- 667
-			chip.swallowTouches = true -- 668
-			chip:onTapped(function() -- 669
-				self.mgr:togglePlacedCoin(card.id, idx) -- 670
-				self:refresh() -- 671
-			end) -- 669
-			chip:onTapBegan(function(t) return self:beginDrag( -- 673
-				"placed", -- 673
-				card.id, -- 673
-				idx, -- 673
-				pc.type, -- 673
-				pc.value, -- 673
-				t -- 673
-			) end) -- 673
-			chip:onTapMoved(function(t) return self:moveDrag(t) end) -- 674
-			chip:onTapEnded(function(t) return self:endDrag(t) end) -- 675
-			chip:addTo(self.cardLayer) -- 676
-			i = i + 1 -- 655
-		end -- 655
-	end -- 655
-end -- 575
-function GameUI.prototype.equationText(self, card) -- 681
-	if #card.coins == 0 then -- 681
-		return "算式：0" -- 682
-	end -- 682
-	local s = "算式：0" -- 683
-	do -- 683
-		local i = 0 -- 684
-		while i < #card.coins do -- 684
-			local c = card.coins[i + 1] -- 685
-			if c.type == CoinType.Multiply then -- 685
-				s = s .. (c.op == "div" and " ÷ " .. tostring(c.value) or " × " .. tostring(c.value)) -- 687
-			else -- 687
-				s = s .. (c.op == "sub" and " − " .. tostring(c.value) or " + " .. tostring(c.value)) -- 689
-			end -- 689
-			i = i + 1 -- 684
-		end -- 684
+			d:drawDot( -- 663
+				Vec2(chipX, chipY), -- 663
+				13, -- 663
+				C_BADGE -- 663
+			) -- 663
+			makeLabel( -- 664
+				node, -- 664
+				self:opSymbol(pc.op) .. tostring(pc.value), -- 664
+				chipX, -- 664
+				chipY, -- 664
+				17, -- 664
+				C_TEXT -- 664
+			) -- 664
+			local chip = Node() -- 665
+			chip.position = Vec2(x + chipX, y + chipY) -- 666
+			chip.size = Size(48, 48) -- 667
+			chip.anchor = Vec2(0.5, 0.5) -- 668
+			chip.touchEnabled = true -- 669
+			chip.swallowTouches = true -- 670
+			chip:onTapped(function() -- 671
+				self.mgr:togglePlacedCoin(card.id, idx) -- 672
+				self:refresh() -- 673
+			end) -- 671
+			chip:onTapBegan(function(t) return self:beginDrag( -- 675
+				"placed", -- 675
+				card.id, -- 675
+				idx, -- 675
+				pc.type, -- 675
+				pc.value, -- 675
+				t -- 675
+			) end) -- 675
+			chip:onTapMoved(function(t) return self:moveDrag(t) end) -- 676
+			chip:onTapEnded(function(t) return self:endDrag(t) end) -- 677
+			chip:addTo(self.cardLayer) -- 678
+			i = i + 1 -- 657
+		end -- 657
+	end -- 657
+end -- 577
+function GameUI.prototype.equationText(self, card) -- 683
+	if #card.coins == 0 then -- 683
+		return "算式：0" -- 684
 	end -- 684
-	return (s .. " = ") .. tostring(self.mgr:evaluateCard(card)) -- 692
-end -- 681
-function GameUI.prototype.renderCoins(self) -- 695
-	self.coinLayer:removeAllChildren() -- 696
-	makeLabel( -- 697
-		self.coinLayer, -- 697
-		"硬币背包", -- 697
-		0, -- 697
-		-168, -- 697
-		20, -- 697
-		C_TEXT_DIM -- 697
-	) -- 697
-	local inv = self.mgr.state.inventory -- 699
-	local cols = 3 -- 700
-	local groupW = 216 -- 701
-	local groupH = 128 -- 702
-	local rowCenters = {-262, -396, -530} -- 703
-	local colCenters = {-220, 0, 220} -- 704
-	local idx = 0 -- 706
-	do -- 706
-		local t = 0 -- 707
-		while t < #COIN_TYPE_ORDER do -- 707
-			do -- 707
-				local ____type = COIN_TYPE_ORDER[t + 1] -- 708
-				local stacks = {} -- 709
-				local total = 0 -- 710
-				do -- 710
-					local i = 0 -- 711
-					while i < #inv do -- 711
-						if inv[i + 1].type == ____type then -- 711
-							stacks[#stacks + 1] = inv[i + 1] -- 713
-							total = total + inv[i + 1].count -- 714
-						end -- 714
-						i = i + 1 -- 711
-					end -- 711
-				end -- 711
-				if #stacks == 0 then -- 711
-					goto __continue106 -- 717
-				end -- 717
-				local col = idx % cols -- 719
-				local row = math.floor(idx / cols) -- 720
-				if row >= 3 then -- 720
-					break -- 721
-				end -- 721
-				local gx = colCenters[col + 1] -- 722
-				local gy = rowCenters[row + 1] -- 723
-				self:buildCoinGroup( -- 724
-					____type, -- 724
-					stacks, -- 724
-					total, -- 724
-					gx, -- 724
-					gy, -- 724
-					groupW, -- 724
-					groupH -- 724
-				) -- 724
-				idx = idx + 1 -- 725
-			end -- 725
-			::__continue106:: -- 725
-			t = t + 1 -- 707
-		end -- 707
-	end -- 707
-	makeLabel( -- 728
-		self.coinLayer, -- 728
-		((("最高关卡 " .. tostring(self.mgr.state.highestLevel)) .. " · 货币 ") .. tostring(self.mgr.state.currency)) .. " · 单次奖励上限 1000", -- 729
-		0, -- 730
-		-600, -- 730
-		15, -- 730
-		C_GOLD_TEXT -- 730
-	) -- 730
-end -- 695
-function GameUI.prototype.buildCoinGroup(self, ____type, stacks, total, gx, gy, w, h) -- 734
-	local node = Node() -- 743
-	node.position = Vec2(gx, gy) -- 744
-	local d = DrawNode() -- 746
-	drawGrad( -- 748
-		d, -- 748
-		0, -- 748
-		0, -- 748
-		w, -- 748
-		h, -- 748
-		{50, 38, 68, 255}, -- 748
-		{24, 18, 34, 255} -- 748
-	) -- 748
-	drawBand( -- 749
-		d, -- 749
-		0, -- 749
-		0, -- 749
-		w, -- 749
-		h, -- 749
-		2, -- 749
-		C_GOLD_DARK -- 749
-	) -- 749
-	drawCorners( -- 750
+	local s = "算式：0" -- 685
+	do -- 685
+		local i = 0 -- 686
+		while i < #card.coins do -- 686
+			local c = card.coins[i + 1] -- 687
+			if c.type == CoinType.Multiply then -- 687
+				s = s .. (c.op == "div" and " ÷ " .. tostring(c.value) or " × " .. tostring(c.value)) -- 689
+			else -- 689
+				s = s .. (c.op == "sub" and " − " .. tostring(c.value) or " + " .. tostring(c.value)) -- 691
+			end -- 691
+			i = i + 1 -- 686
+		end -- 686
+	end -- 686
+	return (s .. " = ") .. tostring(self.mgr:evaluateCard(card)) -- 694
+end -- 683
+function GameUI.prototype.renderCoins(self) -- 697
+	self.coinLayer:removeAllChildren() -- 698
+	makeLabel( -- 699
+		self.coinLayer, -- 699
+		"硬币背包", -- 699
+		0, -- 699
+		-168, -- 699
+		20, -- 699
+		C_TEXT_DIM -- 699
+	) -- 699
+	local inv = self.mgr.state.inventory -- 701
+	local cols = 3 -- 702
+	local groupW = 216 -- 703
+	local groupH = 128 -- 704
+	local rowCenters = {-262, -396, -530} -- 705
+	local colCenters = {-220, 0, 220} -- 706
+	local idx = 0 -- 708
+	do -- 708
+		local t = 0 -- 709
+		while t < #COIN_TYPE_ORDER do -- 709
+			do -- 709
+				local ____type = COIN_TYPE_ORDER[t + 1] -- 710
+				local stacks = {} -- 711
+				local total = 0 -- 712
+				do -- 712
+					local i = 0 -- 713
+					while i < #inv do -- 713
+						if inv[i + 1].type == ____type then -- 713
+							stacks[#stacks + 1] = inv[i + 1] -- 715
+							total = total + inv[i + 1].count -- 716
+						end -- 716
+						i = i + 1 -- 713
+					end -- 713
+				end -- 713
+				if #stacks == 0 then -- 713
+					goto __continue107 -- 719
+				end -- 719
+				local col = idx % cols -- 721
+				local row = math.floor(idx / cols) -- 722
+				if row >= 3 then -- 722
+					break -- 723
+				end -- 723
+				local gx = colCenters[col + 1] -- 724
+				local gy = rowCenters[row + 1] -- 725
+				self:buildCoinGroup( -- 726
+					____type, -- 726
+					stacks, -- 726
+					total, -- 726
+					gx, -- 726
+					gy, -- 726
+					groupW, -- 726
+					groupH -- 726
+				) -- 726
+				idx = idx + 1 -- 727
+			end -- 727
+			::__continue107:: -- 727
+			t = t + 1 -- 709
+		end -- 709
+	end -- 709
+	makeLabel( -- 730
+		self.coinLayer, -- 730
+		((("最高关卡 " .. tostring(self.mgr.state.highestLevel)) .. " · 货币 ") .. tostring(self.mgr.state.currency)) .. " · 单次奖励上限 1000", -- 731
+		0, -- 732
+		-600, -- 732
+		15, -- 732
+		C_GOLD_TEXT -- 732
+	) -- 732
+end -- 697
+function GameUI.prototype.buildCoinGroup(self, ____type, stacks, total, gx, gy, w, h) -- 736
+	local node = Node() -- 745
+	node.position = Vec2(gx, gy) -- 746
+	local d = DrawNode() -- 748
+	drawGrad( -- 750
 		d, -- 750
 		0, -- 750
 		0, -- 750
 		w, -- 750
 		h, -- 750
-		10, -- 750
-		5, -- 750
-		C_GOLD -- 750
+		{50, 38, 68, 255}, -- 750
+		{24, 18, 34, 255} -- 750
 	) -- 750
-	d:addTo(node) -- 751
-	node:addTo(self.coinLayer) -- 752
-	makeLabel( -- 754
-		node, -- 754
-		(coinTypeName(____type) .. " ×") .. tostring(total), -- 754
-		-100, -- 754
-		46, -- 754
-		20, -- 754
-		C_GOLD_TEXT, -- 754
-		Vec2(0, 0.5) -- 754
-	) -- 754
-	local n = #stacks -- 756
-	local chipRadius = 26 -- 757
-	local chipGap = n > 1 and math.min(44, (w - 2 * chipRadius) / (n - 1)) or 0 -- 758
-	do -- 758
-		local i = 0 -- 759
-		while i < n do -- 759
-			local stack = stacks[i + 1] -- 762
-			local chipX = (i - (n - 1) / 2) * chipGap -- 763
-			local chipY = -12 -- 764
-			local cc = coinColor(____type) -- 766
-			d:drawDot( -- 767
-				Vec2(chipX, chipY), -- 767
-				chipRadius, -- 767
-				cc -- 767
-			) -- 767
-			d:drawDot( -- 768
-				Vec2(chipX, chipY), -- 768
-				chipRadius - 3, -- 768
-				C_GOLD_DARK -- 768
-			) -- 768
+	drawBand( -- 751
+		d, -- 751
+		0, -- 751
+		0, -- 751
+		w, -- 751
+		h, -- 751
+		2, -- 751
+		C_GOLD_DARK -- 751
+	) -- 751
+	drawCorners( -- 752
+		d, -- 752
+		0, -- 752
+		0, -- 752
+		w, -- 752
+		h, -- 752
+		10, -- 752
+		5, -- 752
+		C_GOLD -- 752
+	) -- 752
+	d:addTo(node) -- 753
+	node:addTo(self.coinLayer) -- 754
+	makeLabel( -- 756
+		node, -- 756
+		(coinTypeName(____type) .. " ×") .. tostring(total), -- 756
+		-100, -- 756
+		46, -- 756
+		20, -- 756
+		C_GOLD_TEXT, -- 756
+		Vec2(0, 0.5) -- 756
+	) -- 756
+	local n = #stacks -- 758
+	local chipRadius = 26 -- 759
+	local chipGap = n > 1 and math.min(44, (w - 2 * chipRadius) / (n - 1)) or 0 -- 760
+	do -- 760
+		local i = 0 -- 761
+		while i < n do -- 761
+			local stack = stacks[i + 1] -- 764
+			local chipX = (i - (n - 1) / 2) * chipGap -- 765
+			local chipY = -12 -- 766
+			local cc = coinColor(____type) -- 768
 			d:drawDot( -- 769
 				Vec2(chipX, chipY), -- 769
-				chipRadius - 6, -- 769
-				C_BADGE -- 769
+				chipRadius, -- 769
+				cc -- 769
 			) -- 769
 			d:drawDot( -- 770
-				Vec2(chipX - chipRadius * 0.3, chipY + chipRadius * 0.34), -- 770
-				chipRadius * 0.26, -- 770
-				Color(238, 226, 198, 26) -- 770
+				Vec2(chipX, chipY), -- 770
+				chipRadius - 3, -- 770
+				C_GOLD_DARK -- 770
 			) -- 770
-			makeLabel( -- 771
-				node, -- 771
-				coinChipText(____type, stack.value), -- 771
-				chipX, -- 771
-				chipY + 6, -- 771
-				20, -- 771
-				C_TEXT -- 771
+			d:drawDot( -- 771
+				Vec2(chipX, chipY), -- 771
+				chipRadius - 6, -- 771
+				C_BADGE -- 771
 			) -- 771
-			if stack.count > 1 then -- 771
-				makeLabel( -- 773
-					node, -- 773
-					"×" .. tostring(stack.count), -- 773
-					chipX, -- 773
-					chipY - 36, -- 773
-					13, -- 773
-					C_TEXT_FAINT -- 773
-				) -- 773
-			end -- 773
-			local chip = Node() -- 776
-			chip.position = Vec2(gx + chipX, gy + chipY) -- 777
-			chip.size = Size(68, 68) -- 778
-			chip.anchor = Vec2(0.5, 0.5) -- 779
-			chip.touchEnabled = true -- 780
-			chip.swallowTouches = true -- 781
-			chip:onTapped(function() -- 782
-				self:log("FLIP " .. tostring(stack.value)) -- 783
-				self.mgr:flipCoinSign(____type, stack.value) -- 784
-				self.hintText = "" -- 785
-				self:refresh() -- 786
-			end) -- 782
-			chip:onTapBegan(function(t) return self:beginDrag( -- 788
-				"inventory", -- 788
-				0, -- 788
-				0, -- 788
-				____type, -- 788
-				stack.value, -- 788
-				t -- 788
-			) end) -- 788
-			chip:onTapMoved(function(t) return self:moveDrag(t) end) -- 789
-			chip:onTapEnded(function(t) return self:endDrag(t) end) -- 790
-			chip:addTo(self.coinLayer) -- 791
-			i = i + 1 -- 759
-		end -- 759
-	end -- 759
-end -- 734
-function GameUI.prototype.updateOverlay(self) -- 797
-	local s = self.mgr.state -- 798
-	self.overlayLayer:removeAllChildren() -- 799
-	if s.status == "playing" then -- 799
-		self.metaOpen = false -- 802
-		self.metaMessage = "" -- 803
-		return -- 804
-	end -- 804
-	local dim = DrawNode() -- 808
-	dim:drawPolygon( -- 809
-		rectVerts(0, 0, ____exports.DESIGN_W, ____exports.DESIGN_H), -- 809
-		Color(8, 6, 5, 210), -- 809
-		0 -- 809
-	) -- 809
-	dim:addTo(self.overlayLayer) -- 810
-	if self.metaOpen then -- 810
-		self:renderMetaPanel() -- 813
-		return -- 814
-	end -- 814
-	local panel = DrawNode() -- 818
-	panel:drawPolygon( -- 819
-		rectVerts(0, 0, 520, 430), -- 819
-		C_PANEL, -- 819
-		4, -- 819
-		C_PANEL_BORDER -- 819
-	) -- 819
-	panel:addTo(self.overlayLayer) -- 820
-	if s.status == "lost" then -- 820
-		makeLabel( -- 823
-			self.overlayLayer, -- 823
-			"游戏失败", -- 823
-			0, -- 823
-			120, -- 823
-			34, -- 823
-			C_DANGER -- 823
-		) -- 823
-		makeLabel( -- 824
-			self.overlayLayer, -- 824
-			"生命归零，未能完成本关", -- 824
-			0, -- 824
-			60, -- 824
-			18, -- 824
-			C_TEXT_DIM -- 824
-		) -- 824
+			d:drawDot( -- 772
+				Vec2(chipX - chipRadius * 0.3, chipY + chipRadius * 0.34), -- 772
+				chipRadius * 0.26, -- 772
+				Color(238, 226, 198, 26) -- 772
+			) -- 772
+			makeLabel( -- 773
+				node, -- 773
+				coinChipText(____type, stack.value), -- 773
+				chipX, -- 773
+				chipY + 6, -- 773
+				20, -- 773
+				C_TEXT -- 773
+			) -- 773
+			if stack.count > 1 then -- 773
+				makeLabel( -- 775
+					node, -- 775
+					"×" .. tostring(stack.count), -- 775
+					chipX, -- 775
+					chipY - 36, -- 775
+					13, -- 775
+					C_TEXT_FAINT -- 775
+				) -- 775
+			end -- 775
+			local chip = Node() -- 778
+			chip.position = Vec2(gx + chipX, gy + chipY) -- 779
+			chip.size = Size(68, 68) -- 780
+			chip.anchor = Vec2(0.5, 0.5) -- 781
+			chip.touchEnabled = true -- 782
+			chip.swallowTouches = true -- 783
+			chip:onTapped(function() -- 784
+				self:log("FLIP " .. tostring(stack.value)) -- 785
+				self.mgr:flipCoinSign(____type, stack.value) -- 786
+				self.hintText = "" -- 787
+				self:refresh() -- 788
+			end) -- 784
+			chip:onTapBegan(function(t) return self:beginDrag( -- 790
+				"inventory", -- 790
+				0, -- 790
+				0, -- 790
+				____type, -- 790
+				stack.value, -- 790
+				t -- 790
+			) end) -- 790
+			chip:onTapMoved(function(t) return self:moveDrag(t) end) -- 791
+			chip:onTapEnded(function(t) return self:endDrag(t) end) -- 792
+			chip:addTo(self.coinLayer) -- 793
+			i = i + 1 -- 761
+		end -- 761
+	end -- 761
+end -- 736
+function GameUI.prototype.updateOverlay(self) -- 799
+	local s = self.mgr.state -- 800
+	self.overlayLayer:removeAllChildren() -- 801
+	if s.status == "playing" then -- 801
+		self.metaOpen = false -- 804
+		self.metaMessage = "" -- 805
+		return -- 806
+	end -- 806
+	local dim = DrawNode() -- 810
+	dim:drawPolygon( -- 811
+		rectVerts(0, 0, ____exports.DESIGN_W, ____exports.DESIGN_H), -- 811
+		Color(8, 6, 5, 210), -- 811
+		0 -- 811
+	) -- 811
+	dim:addTo(self.overlayLayer) -- 812
+	if self.metaOpen then -- 812
+		self:renderMetaPanel(self.overlayLayer) -- 815
+		return -- 816
+	end -- 816
+	local panel = DrawNode() -- 820
+	panel:drawPolygon( -- 821
+		rectVerts(0, 0, 520, 430), -- 821
+		C_PANEL, -- 821
+		4, -- 821
+		C_PANEL_BORDER -- 821
+	) -- 821
+	panel:addTo(self.overlayLayer) -- 822
+	if s.status == "lost" then -- 822
 		makeLabel( -- 825
 			self.overlayLayer, -- 825
-			((((("第 " .. tostring(s.level)) .. " 关 · 已消除 ") .. tostring(s.eliminatedCount)) .. "/") .. tostring(s.targetCount)) .. " 张", -- 825
+			"游戏失败", -- 825
 			0, -- 825
-			22, -- 825
-			16, -- 825
-			C_TEXT_DIM -- 825
+			120, -- 825
+			34, -- 825
+			C_DANGER -- 825
 		) -- 825
-		self:addOverlayButton( -- 826
-			"重试", -- 826
+		makeLabel( -- 826
+			self.overlayLayer, -- 826
+			"生命归零，未能完成本关", -- 826
 			0, -- 826
-			-120, -- 826
-			220, -- 826
-			50, -- 826
-			C_ENDTURN, -- 826
-			"retry" -- 826
+			60, -- 826
+			18, -- 826
+			C_TEXT_DIM -- 826
 		) -- 826
-	elseif s.status == "complete" then -- 826
-		if not self.rewardsApplied then -- 826
-			self.lastReward = self.mgr:applyWinRewards() -- 828
-			self.rewardsApplied = true -- 828
-		end -- 828
-		makeLabel( -- 829
-			self.overlayLayer, -- 829
-			"全部通关！", -- 829
-			0, -- 829
-			120, -- 829
-			34, -- 829
-			C_GOLD_TEXT -- 829
-		) -- 829
-		makeLabel( -- 830
-			self.overlayLayer, -- 830
-			("你完成了全部 " .. tostring(GameDataManager.MAX_LEVEL)) .. " 关", -- 830
-			0, -- 830
-			60, -- 830
-			18, -- 830
-			C_TEXT -- 830
-		) -- 830
+		makeLabel( -- 827
+			self.overlayLayer, -- 827
+			((((("第 " .. tostring(s.level)) .. " 关 · 已消除 ") .. tostring(s.eliminatedCount)) .. "/") .. tostring(s.targetCount)) .. " 张", -- 827
+			0, -- 827
+			22, -- 827
+			16, -- 827
+			C_TEXT_DIM -- 827
+		) -- 827
+		self:addOverlayButton( -- 828
+			"重试", -- 828
+			0, -- 828
+			-120, -- 828
+			220, -- 828
+			50, -- 828
+			C_ENDTURN, -- 828
+			"retry" -- 828
+		) -- 828
+	elseif s.status == "complete" then -- 828
+		if not self.rewardsApplied then -- 828
+			self.lastReward = self.mgr:applyWinRewards() -- 830
+			self.rewardsApplied = true -- 830
+		end -- 830
 		makeLabel( -- 831
 			self.overlayLayer, -- 831
-			"总货币 " .. tostring(s.currency), -- 831
+			"全部通关！", -- 831
 			0, -- 831
-			22, -- 831
-			16, -- 831
-			C_TEXT_DIM -- 831
+			120, -- 831
+			34, -- 831
+			C_GOLD_TEXT -- 831
 		) -- 831
-		self:addOverlayButton( -- 832
-			"重新开始", -- 832
+		makeLabel( -- 832
+			self.overlayLayer, -- 832
+			("你完成了全部 " .. tostring(GameDataManager.MAX_LEVEL)) .. " 关", -- 832
 			0, -- 832
-			-90, -- 832
-			220, -- 832
-			44, -- 832
-			C_CONFIRM, -- 832
-			"restart" -- 832
+			60, -- 832
+			18, -- 832
+			C_TEXT -- 832
 		) -- 832
-		self:addOverlayButton( -- 833
-			"选择关卡", -- 833
+		makeLabel( -- 833
+			self.overlayLayer, -- 833
+			"总货币 " .. tostring(s.currency), -- 833
 			0, -- 833
-			-150, -- 833
-			220, -- 833
-			44, -- 833
-			Color(104, 82, 148, 255), -- 833
-			"toLevels" -- 833
+			22, -- 833
+			16, -- 833
+			C_TEXT_DIM -- 833
 		) -- 833
-	else -- 833
-		if not self.rewardsApplied then -- 833
-			self.lastReward = self.mgr:applyWinRewards() -- 835
-			self.rewardsApplied = true -- 835
-		end -- 835
-		makeLabel( -- 836
-			self.overlayLayer, -- 836
-			"关卡完成！", -- 836
-			0, -- 836
-			120, -- 836
-			34, -- 836
-			C_GOLD_TEXT -- 836
-		) -- 836
-		makeLabel( -- 837
-			self.overlayLayer, -- 837
-			(((((("已消除 " .. tostring(s.eliminatedCount)) .. "/") .. tostring(s.targetCount)) .. " 张 · 生命 ") .. tostring(s.hp)) .. "/") .. tostring(s.maxHp), -- 837
-			0, -- 837
-			60, -- 837
-			18, -- 837
-			C_TEXT -- 837
-		) -- 837
-		local rewardText = "货币 +0 · 新硬币 +1" -- 838
-		if self.lastReward then -- 838
-			rewardText = (((("货币 +" .. tostring(self.lastReward.currency)) .. " · 新硬币：") .. coinTypeName(self.lastReward.coinType)) .. " ") .. tostring(self.lastReward.coinValue) -- 840
-		end -- 840
-		makeLabel( -- 842
-			self.overlayLayer, -- 842
-			rewardText, -- 842
-			0, -- 842
-			22, -- 842
-			16, -- 842
-			C_TEXT_DIM -- 842
-		) -- 842
-		self:addOverlayButton( -- 843
-			"下一关", -- 843
-			0, -- 843
-			-80, -- 843
-			220, -- 843
-			44, -- 843
-			C_CONFIRM, -- 843
-			"next" -- 843
-		) -- 843
-		self:addOverlayButton( -- 844
-			"选择关卡", -- 844
+		self:addOverlayButton( -- 834
+			"重新开始", -- 834
+			0, -- 834
+			-90, -- 834
+			220, -- 834
+			44, -- 834
+			C_CONFIRM, -- 834
+			"restart" -- 834
+		) -- 834
+		self:addOverlayButton( -- 835
+			"选择关卡", -- 835
+			0, -- 835
+			-150, -- 835
+			220, -- 835
+			44, -- 835
+			Color(104, 82, 148, 255), -- 835
+			"toLevels" -- 835
+		) -- 835
+	else -- 835
+		if not self.rewardsApplied then -- 835
+			self.lastReward = self.mgr:applyWinRewards() -- 837
+			self.rewardsApplied = true -- 837
+		end -- 837
+		makeLabel( -- 838
+			self.overlayLayer, -- 838
+			"关卡完成！", -- 838
+			0, -- 838
+			120, -- 838
+			34, -- 838
+			C_GOLD_TEXT -- 838
+		) -- 838
+		makeLabel( -- 839
+			self.overlayLayer, -- 839
+			(((((("已消除 " .. tostring(s.eliminatedCount)) .. "/") .. tostring(s.targetCount)) .. " 张 · 生命 ") .. tostring(s.hp)) .. "/") .. tostring(s.maxHp), -- 839
+			0, -- 839
+			60, -- 839
+			18, -- 839
+			C_TEXT -- 839
+		) -- 839
+		local rewardText = "货币 +0 · 新硬币 +1" -- 840
+		if self.lastReward then -- 840
+			rewardText = (((("货币 +" .. tostring(self.lastReward.currency)) .. " · 新硬币：") .. coinTypeName(self.lastReward.coinType)) .. " ") .. tostring(self.lastReward.coinValue) -- 842
+		end -- 842
+		makeLabel( -- 844
+			self.overlayLayer, -- 844
+			rewardText, -- 844
 			0, -- 844
-			-135, -- 844
-			220, -- 844
-			44, -- 844
-			Color(104, 82, 148, 255), -- 844
-			"toLevels" -- 844
+			22, -- 844
+			16, -- 844
+			C_TEXT_DIM -- 844
 		) -- 844
 		self:addOverlayButton( -- 845
-			"养成", -- 845
+			"下一关", -- 845
 			0, -- 845
-			-190, -- 845
+			-80, -- 845
 			220, -- 845
 			44, -- 845
-			Color(104, 82, 148, 255), -- 845
-			"meta" -- 845
+			C_CONFIRM, -- 845
+			"next" -- 845
 		) -- 845
-	end -- 845
-end -- 797
-function GameUI.prototype.renderMetaPanel(self) -- 849
-	local panel = DrawNode() -- 850
-	panel:drawPolygon( -- 851
-		rectVerts(0, 0, 640, 560), -- 851
-		C_PANEL, -- 851
-		4, -- 851
-		C_PANEL_BORDER -- 851
-	) -- 851
-	panel:addTo(self.overlayLayer) -- 852
-	local s = self.mgr.state -- 854
-	makeLabel( -- 855
-		self.overlayLayer, -- 855
-		"局外养成", -- 855
-		0, -- 855
-		230, -- 855
-		30, -- 855
-		C_GOLD_TEXT -- 855
+		self:addOverlayButton( -- 846
+			"选择关卡", -- 846
+			0, -- 846
+			-135, -- 846
+			220, -- 846
+			44, -- 846
+			Color(104, 82, 148, 255), -- 846
+			"toLevels" -- 846
+		) -- 846
+		self:addOverlayButton( -- 847
+			"养成", -- 847
+			0, -- 847
+			-190, -- 847
+			220, -- 847
+			44, -- 847
+			Color(104, 82, 148, 255), -- 847
+			"meta" -- 847
+		) -- 847
+	end -- 847
+end -- 799
+function GameUI.prototype.renderMetaPanel(self, parent) -- 851
+	local W = 660 -- 852
+	local H = 1010 -- 853
+	local panel = DrawNode() -- 854
+	panel:drawPolygon( -- 855
+		rectVerts(0, 0, W, H), -- 855
+		C_PANEL, -- 855
+		4, -- 855
+		C_PANEL_BORDER -- 855
 	) -- 855
-	makeLabel( -- 856
-		self.overlayLayer, -- 856
-		(((("货币 " .. tostring(s.currency)) .. " · 血量上限 ") .. tostring(s.maxHp)) .. " · 删除次数 ") .. tostring(self.mgr.deleteCredits), -- 856
+	drawBand( -- 856
+		panel, -- 856
 		0, -- 856
-		180, -- 856
-		16, -- 856
-		C_TEXT -- 856
+		0, -- 856
+		W, -- 856
+		H, -- 856
+		3, -- 856
+		C_GOLD_DARK -- 856
 	) -- 856
-	makeLabel( -- 857
-		self.overlayLayer, -- 857
-		"扫荡奖励按最高关卡计，货币上限 1000", -- 857
+	drawBand( -- 857
+		panel, -- 857
 		0, -- 857
-		148, -- 857
-		13, -- 857
-		C_TEXT_DIM -- 857
+		0, -- 857
+		W - 16, -- 857
+		H - 16, -- 857
+		1, -- 857
+		C_GOLD -- 857
 	) -- 857
-	if self.metaMessage ~= "" then -- 857
-		makeLabel( -- 859
-			self.overlayLayer, -- 859
-			self.metaMessage, -- 859
-			0, -- 859
-			112, -- 859
-			14, -- 859
-			Color(120, 220, 150, 255) -- 859
-		) -- 859
-	end -- 859
-	self:addOverlayButton( -- 862
-		"合成硬币", -- 862
-		0, -- 862
-		60, -- 862
-		300, -- 862
-		44, -- 862
-		Color(104, 82, 148, 255), -- 862
-		"synthesize" -- 862
-	) -- 862
-	self:addOverlayButton( -- 863
-		"强化血量（100）", -- 863
-		0, -- 863
-		4, -- 863
-		300, -- 863
-		44, -- 863
-		C_ENDTURN, -- 863
-		"upgradeHp" -- 863
-	) -- 863
-	self:addOverlayButton( -- 864
-		"强化删除次数（80）", -- 864
+	drawCorners( -- 858
+		panel, -- 858
+		0, -- 858
+		0, -- 858
+		W, -- 858
+		H, -- 858
+		20, -- 858
+		11, -- 858
+		C_GOLD_BRIGHT -- 858
+	) -- 858
+	panel:drawSegment( -- 859
+		Vec2(-286, 292), -- 859
+		Vec2(286, 292), -- 859
+		1, -- 859
+		C_GOLD_DARK -- 859
+	) -- 859
+	panel:drawSegment( -- 860
+		Vec2(-286, 96), -- 860
+		Vec2(286, 96), -- 860
+		1, -- 860
+		C_GOLD_DARK -- 860
+	) -- 860
+	panel:addTo(parent) -- 861
+	local s = self.mgr.state -- 863
+	makeLabel( -- 864
+		parent, -- 864
+		"局外养成", -- 864
 		0, -- 864
-		-52, -- 864
-		300, -- 864
-		44, -- 864
-		C_ENDTURN, -- 864
-		"upgradeDelete" -- 864
+		436, -- 864
+		36, -- 864
+		C_GOLD_TEXT -- 864
 	) -- 864
-	self:addOverlayButton( -- 865
-		"删除一枚硬币", -- 865
+	makeLabel( -- 865
+		parent, -- 865
+		(((("货币 " .. tostring(s.currency)) .. " · 血量上限 ") .. tostring(s.maxHp)) .. " · 删除次数 ") .. tostring(self.mgr.deleteCredits), -- 865
 		0, -- 865
-		-108, -- 865
-		300, -- 865
-		44, -- 865
-		Color(158, 70, 104, 255), -- 865
-		"delete" -- 865
+		384, -- 865
+		17, -- 865
+		C_TEXT -- 865
 	) -- 865
-	self:addOverlayButton( -- 866
-		"扫荡", -- 866
+	makeLabel( -- 866
+		parent, -- 866
+		"扫荡奖励按最高关卡计，货币上限 1000", -- 866
 		0, -- 866
-		-164, -- 866
-		300, -- 866
-		44, -- 866
-		C_CONFIRM, -- 866
-		"sweep" -- 866
+		354, -- 866
+		13, -- 866
+		C_TEXT_DIM -- 866
 	) -- 866
-	self:addOverlayButton( -- 867
-		"返回", -- 867
-		0, -- 867
-		-230, -- 867
-		300, -- 867
-		44, -- 867
-		Color(84, 70, 118, 255), -- 867
-		"back" -- 867
-	) -- 867
-end -- 849
-function GameUI.prototype.addOverlayButton(self, text, cx, cy, w, h, color, action) -- 870
-	local node = Node() -- 871
-	node.position = Vec2(cx, cy) -- 872
-	node.size = Size(w, h) -- 873
-	node.anchor = Vec2(0.5, 0.5) -- 874
-	local d = DrawNode() -- 875
-	d:drawPolygon( -- 876
-		rectVerts(w / 2, h / 2, w, h), -- 876
-		color, -- 876
-		2, -- 876
-		C_CONFIRM_BORDER -- 876
-	) -- 876
-	d:addTo(node) -- 877
-	makeLabel( -- 878
-		node, -- 878
-		text, -- 878
-		w / 2, -- 878
-		h / 2, -- 878
-		20, -- 878
-		C_TEXT -- 878
-	) -- 878
-	node.touchEnabled = true -- 879
-	node:onTapped(function() return self:handleOverlayAction(action) end) -- 880
-	node:addTo(self.overlayLayer) -- 881
-end -- 870
-function GameUI.prototype.handleOverlayAction(self, action) -- 884
-	if action == "toLevels" then -- 884
-		self.metaOpen = false -- 886
-		self.metaMessage = "" -- 887
-		self.screen = "levels" -- 888
-		self:refresh() -- 889
-		return -- 890
-	end -- 890
-	if action == "retry" then -- 890
-		self.mgr:startLevel(self.mgr.state.level) -- 893
-		self.rewardsApplied = false -- 894
-		self.lastReward = nil -- 895
-		self.selectedCardId = nil -- 896
-		self.metaOpen = false -- 897
-		self.metaMessage = "" -- 898
-		self:refresh() -- 899
-		return -- 900
-	end -- 900
-	if action == "next" then -- 900
-		self.mgr:startLevel(self.mgr.state.level + 1) -- 903
-		self.rewardsApplied = false -- 904
-		self.lastReward = nil -- 905
-		self.selectedCardId = nil -- 906
-		self.metaOpen = false -- 907
-		self.metaMessage = "" -- 908
+	if self.metaMessage ~= "" then -- 866
+		makeLabel( -- 868
+			parent, -- 868
+			self.metaMessage, -- 868
+			0, -- 868
+			320, -- 868
+			16, -- 868
+			C_GOLD_TEXT -- 868
+		) -- 868
+	end -- 868
+	makeLabel( -- 871
+		parent, -- 871
+		"增加基础硬币（每枚 100 货币）", -- 871
+		0, -- 871
+		258, -- 871
+		21, -- 871
+		C_TEXT -- 871
+	) -- 871
+	local buyValues = { -- 872
+		1, -- 872
+		2, -- 872
+		3, -- 872
+		5, -- 872
+		10, -- 872
+		50 -- 872
+	} -- 872
+	do -- 872
+		local i = 0 -- 873
+		while i < #buyValues do -- 873
+			local col = i % 3 -- 874
+			local row = math.floor(i / 3) -- 875
+			local bx = -212 + col * 212 -- 876
+			local by = 202 - row * 74 -- 877
+			self:addOverlayButton( -- 878
+				"＋" .. tostring(buyValues[i + 1]), -- 878
+				bx, -- 878
+				by, -- 878
+				186, -- 878
+				52, -- 878
+				C_ENDTURN, -- 878
+				"buy" .. tostring(i), -- 878
+				parent, -- 878
+				22 -- 878
+			) -- 878
+			i = i + 1 -- 873
+		end -- 873
+	end -- 873
+	self:addOverlayButton( -- 881
+		"合成硬币", -- 881
+		0, -- 881
+		50, -- 881
+		340, -- 881
+		52, -- 881
+		Color(104, 82, 148, 255), -- 881
+		"synthesize", -- 881
+		parent, -- 881
+		21 -- 881
+	) -- 881
+	self:addOverlayButton( -- 882
+		"强化血量（100）", -- 882
+		0, -- 882
+		-24, -- 882
+		340, -- 882
+		52, -- 882
+		C_ENDTURN, -- 882
+		"upgradeHp", -- 882
+		parent, -- 882
+		21 -- 882
+	) -- 882
+	self:addOverlayButton( -- 883
+		"强化删除次数（80）", -- 883
+		0, -- 883
+		-98, -- 883
+		340, -- 883
+		52, -- 883
+		C_ENDTURN, -- 883
+		"upgradeDelete", -- 883
+		parent, -- 883
+		21 -- 883
+	) -- 883
+	self:addOverlayButton( -- 884
+		"删除一枚硬币", -- 884
+		0, -- 884
+		-172, -- 884
+		340, -- 884
+		52, -- 884
+		Color(158, 70, 104, 255), -- 884
+		"delete", -- 884
+		parent, -- 884
+		21 -- 884
+	) -- 884
+	self:addOverlayButton( -- 885
+		"扫荡", -- 885
+		0, -- 885
+		-246, -- 885
+		340, -- 885
+		52, -- 885
+		C_CONFIRM, -- 885
+		"sweep", -- 885
+		parent, -- 885
+		21 -- 885
+	) -- 885
+	self:addOverlayButton( -- 887
+		"返回", -- 887
+		0, -- 887
+		-388, -- 887
+		320, -- 887
+		58, -- 887
+		Color(84, 70, 118, 255), -- 887
+		"back", -- 887
+		parent, -- 887
+		23 -- 887
+	) -- 887
+end -- 851
+function GameUI.prototype.addOverlayButton(self, text, cx, cy, w, h, color, action, parent, fontSize) -- 890
+	local node = Node() -- 891
+	node.position = Vec2(cx, cy) -- 892
+	node.size = Size(w, h) -- 893
+	node.anchor = Vec2(0.5, 0.5) -- 894
+	local d = DrawNode() -- 895
+	d:drawPolygon( -- 896
+		rectVerts(w / 2, h / 2, w, h), -- 896
+		color, -- 896
+		2, -- 896
+		C_CONFIRM_BORDER -- 896
+	) -- 896
+	d:addTo(node) -- 897
+	makeLabel( -- 898
+		node, -- 898
+		text, -- 898
+		w / 2, -- 898
+		h / 2, -- 898
+		fontSize and fontSize or 20, -- 898
+		C_TEXT -- 898
+	) -- 898
+	node.touchEnabled = true -- 899
+	node:onTapped(function() return self:handleOverlayAction(action) end) -- 900
+	node:addTo(parent and parent or self.overlayLayer) -- 901
+end -- 890
+function GameUI.prototype.handleOverlayAction(self, action) -- 904
+	if action == "toLevels" then -- 904
+		self.metaOpen = false -- 906
+		self.metaMessage = "" -- 907
+		self.screen = "levels" -- 908
 		self:refresh() -- 909
 		return -- 910
 	end -- 910
-	if action == "restart" then -- 910
-		self.mgr:startLevel(1) -- 913
+	if action == "retry" then -- 910
+		self.mgr:startLevel(self.mgr.state.level) -- 913
 		self.rewardsApplied = false -- 914
 		self.lastReward = nil -- 915
 		self.selectedCardId = nil -- 916
@@ -1958,310 +2039,340 @@ function GameUI.prototype.handleOverlayAction(self, action) -- 884
 		self:refresh() -- 919
 		return -- 920
 	end -- 920
-	if action == "meta" then -- 920
-		self.metaOpen = true -- 923
-		self.metaMessage = "" -- 924
-		self:refresh() -- 925
-		return -- 926
-	end -- 926
-	if action == "back" then -- 926
-		self.metaOpen = false -- 929
-		self.metaMessage = "" -- 930
-		self:refresh() -- 931
-		return -- 932
-	end -- 932
-	if action == "synthesize" then -- 932
-		local r = self.mgr:synthesizeOnce() -- 935
-		self.metaMessage = r.ok and (((((("合成成功：" .. coinTypeName(r.type)) .. " ") .. tostring(r.valueA)) .. " + ") .. tostring(r.valueB)) .. " → ") .. tostring(r.resultValue) or "无可合成硬币（需同类型至少 2 枚）" -- 936
+	if action == "next" then -- 920
+		self.mgr:startLevel(self.mgr.state.level + 1) -- 923
+		self.rewardsApplied = false -- 924
+		self.lastReward = nil -- 925
+		self.selectedCardId = nil -- 926
+		self.metaOpen = false -- 927
+		self.metaMessage = "" -- 928
+		self:refresh() -- 929
+		return -- 930
+	end -- 930
+	if action == "restart" then -- 930
+		self.mgr:startLevel(1) -- 933
+		self.rewardsApplied = false -- 934
+		self.lastReward = nil -- 935
+		self.selectedCardId = nil -- 936
+		self.metaOpen = false -- 937
+		self.metaMessage = "" -- 938
 		self:refresh() -- 939
 		return -- 940
 	end -- 940
-	if action == "upgradeHp" then -- 940
-		local r = self.mgr:upgradeMaxHp() -- 943
-		self.metaMessage = r.ok and "血量上限提升至 " .. tostring(r.newMaxHp) or r.reason -- 944
+	if action == "meta" then -- 940
+		self.metaOpen = true -- 943
+		self.metaMessage = "" -- 944
 		self:refresh() -- 945
 		return -- 946
 	end -- 946
-	if action == "upgradeDelete" then -- 946
-		local r = self.mgr:upgradeDeleteCredits() -- 949
-		self.metaMessage = r.ok and ("删除次数 +2（当前 " .. tostring(r.newCredits)) .. "）" or r.reason -- 950
-		self:refresh() -- 951
-		return -- 952
-	end -- 952
-	if action == "delete" then -- 952
-		local r = self.mgr:deleteOnce() -- 955
-		self.metaMessage = r.ok and (("已删除 " .. coinTypeName(r.type)) .. " ") .. tostring(r.value) or r.reason -- 956
-		self:refresh() -- 957
-		return -- 958
-	end -- 958
-	if action == "sweep" then -- 958
-		local r = self.mgr:sweepLevel() -- 961
-		self.metaMessage = r.ok and (((("扫荡获得货币 +" .. tostring(r.currency)) .. " · 硬币 ") .. coinTypeName(r.coinType)) .. " ") .. tostring(r.coinValue) or r.reason -- 962
-		self:refresh() -- 963
-		return -- 964
-	end -- 964
-end -- 884
-function GameUI.prototype.makeButton(self, rect, text, top, bottom, textColor, onTap, parent, fontSize) -- 971
-	local node = Node() -- 981
-	node.position = Vec2(rect.x, rect.y) -- 982
-	node.size = Size(rect.w, rect.h) -- 983
-	node.anchor = Vec2(0.5, 0.5) -- 984
-	local d = DrawNode() -- 985
-	drawGrad( -- 986
-		d, -- 986
-		rect.w / 2, -- 986
-		rect.h / 2, -- 986
-		rect.w, -- 986
-		rect.h, -- 986
-		top, -- 986
-		bottom -- 986
-	) -- 986
-	drawSheen( -- 987
-		d, -- 987
-		rect.w / 2, -- 987
-		rect.h / 2, -- 987
-		rect.w, -- 987
-		rect.h, -- 987
-		48 -- 987
-	) -- 987
-	drawBand( -- 988
-		d, -- 988
-		rect.w / 2, -- 988
-		rect.h / 2, -- 988
-		rect.w, -- 988
-		rect.h, -- 988
-		2, -- 988
-		C_GOLD_DARK -- 988
-	) -- 988
-	drawBand( -- 989
-		d, -- 989
-		rect.w / 2, -- 989
-		rect.h / 2, -- 989
-		rect.w - 8, -- 989
-		rect.h - 8, -- 989
-		1, -- 989
-		C_GOLD_BRIGHT -- 989
-	) -- 989
-	d:addTo(node) -- 990
-	makeLabel( -- 991
-		node, -- 991
-		text, -- 991
-		rect.w / 2, -- 991
-		rect.h / 2, -- 991
-		fontSize and fontSize or 20, -- 991
-		textColor -- 991
-	) -- 991
-	node.touchEnabled = true -- 992
-	node:onTapped(function() return onTap() end) -- 993
-	node:addTo(parent and parent or self.actionLayer) -- 994
-end -- 971
-function GameUI.prototype.dragPoint(self, t, node) -- 999
-	local wl = t.worldLocation -- 1000
-	if wl ~= nil then -- 1000
-		return Vec2(wl.x, wl.y) -- 1001
-	end -- 1001
-	if node then -- 1001
-		return node:convertToWorldSpace(t.location) -- 1002
-	end -- 1002
-	return Vec2(t.location.x, t.location.y) -- 1003
+	if action == "back" then -- 946
+		self.metaOpen = false -- 949
+		self.metaMessage = "" -- 950
+		if self.screen == "meta" then -- 950
+			self.screen = "levels" -- 951
+		end -- 951
+		self:refresh() -- 952
+		return -- 953
+	end -- 953
+	if (string.find(action, "buy", nil, true) or 0) - 1 == 0 then -- 953
+		local idx = __TS__Number(__TS__StringSubstring(action, 3)) -- 956
+		local br = self.mgr:buyBaseCoin(idx) -- 957
+		self.metaMessage = br.ok and "已增加基础硬币 " .. tostring(br.value) or br.reason -- 958
+		self:refresh() -- 959
+		return -- 960
+	end -- 960
+	if action == "synthesize" then -- 960
+		local r = self.mgr:synthesizeOnce() -- 963
+		self.metaMessage = r.ok and (((((("合成成功：" .. coinTypeName(r.type)) .. " ") .. tostring(r.valueA)) .. " + ") .. tostring(r.valueB)) .. " → ") .. tostring(r.resultValue) or "无可合成硬币（需同类型至少 2 枚）" -- 964
+		self:refresh() -- 967
+		return -- 968
+	end -- 968
+	if action == "upgradeHp" then -- 968
+		local r = self.mgr:upgradeMaxHp() -- 971
+		self.metaMessage = r.ok and "血量上限提升至 " .. tostring(r.newMaxHp) or r.reason -- 972
+		self:refresh() -- 973
+		return -- 974
+	end -- 974
+	if action == "upgradeDelete" then -- 974
+		local r = self.mgr:upgradeDeleteCredits() -- 977
+		self.metaMessage = r.ok and ("删除次数 +2（当前 " .. tostring(r.newCredits)) .. "）" or r.reason -- 978
+		self:refresh() -- 979
+		return -- 980
+	end -- 980
+	if action == "delete" then -- 980
+		local r = self.mgr:deleteOnce() -- 983
+		self.metaMessage = r.ok and (("已删除 " .. coinTypeName(r.type)) .. " ") .. tostring(r.value) or r.reason -- 984
+		self:refresh() -- 985
+		return -- 986
+	end -- 986
+	if action == "sweep" then -- 986
+		local r = self.mgr:sweepLevel() -- 989
+		self.metaMessage = r.ok and (((("扫荡获得货币 +" .. tostring(r.currency)) .. " · 硬币 ") .. coinTypeName(r.coinType)) .. " ") .. tostring(r.coinValue) or r.reason -- 990
+		self:refresh() -- 991
+		return -- 992
+	end -- 992
+end -- 904
+function GameUI.prototype.makeButton(self, rect, text, top, bottom, textColor, onTap, parent, fontSize) -- 999
+	local node = Node() -- 1009
+	node.position = Vec2(rect.x, rect.y) -- 1010
+	node.size = Size(rect.w, rect.h) -- 1011
+	node.anchor = Vec2(0.5, 0.5) -- 1012
+	local d = DrawNode() -- 1013
+	drawGrad( -- 1014
+		d, -- 1014
+		rect.w / 2, -- 1014
+		rect.h / 2, -- 1014
+		rect.w, -- 1014
+		rect.h, -- 1014
+		top, -- 1014
+		bottom -- 1014
+	) -- 1014
+	drawSheen( -- 1015
+		d, -- 1015
+		rect.w / 2, -- 1015
+		rect.h / 2, -- 1015
+		rect.w, -- 1015
+		rect.h, -- 1015
+		48 -- 1015
+	) -- 1015
+	drawBand( -- 1016
+		d, -- 1016
+		rect.w / 2, -- 1016
+		rect.h / 2, -- 1016
+		rect.w, -- 1016
+		rect.h, -- 1016
+		2, -- 1016
+		C_GOLD_DARK -- 1016
+	) -- 1016
+	drawBand( -- 1017
+		d, -- 1017
+		rect.w / 2, -- 1017
+		rect.h / 2, -- 1017
+		rect.w - 8, -- 1017
+		rect.h - 8, -- 1017
+		1, -- 1017
+		C_GOLD_BRIGHT -- 1017
+	) -- 1017
+	d:addTo(node) -- 1018
+	makeLabel( -- 1019
+		node, -- 1019
+		text, -- 1019
+		rect.w / 2, -- 1019
+		rect.h / 2, -- 1019
+		fontSize and fontSize or 20, -- 1019
+		textColor -- 1019
+	) -- 1019
+	node.touchEnabled = true -- 1020
+	node:onTapped(function() return onTap() end) -- 1021
+	node:addTo(parent and parent or self.actionLayer) -- 1022
 end -- 999
-function GameUI.prototype.beginDrag(self, kind, cardId, index, ____type, value, t) -- 1006
-	if self.drag then -- 1006
-		return -- 1015
-	end -- 1015
-	self.lastMoveLog = 0 -- 1016
-	self.dragEndedEarly = false -- 1017
-	self:log((((("BEGIN " .. kind) .. " val=") .. tostring(value)) .. " mouseDown=") .. tostring(Mouse.leftButtonPressed)) -- 1018
-	self.drag = { -- 1019
-		kind = kind, -- 1019
-		cardId = cardId, -- 1019
-		index = index, -- 1019
-		type = ____type, -- 1019
-		value = value -- 1019
-	} -- 1019
-	local wp = self:dragPoint(t) -- 1020
-	self.dragStart = wp -- 1021
-	self:makeGhost(____type, value, wp) -- 1022
-	self.hintText = "把硬币放到某张卡牌上" -- 1024
-	self:renderHud() -- 1025
-end -- 1006
-function GameUI.prototype.moveDrag(self, t) -- 1028
-	if not self.drag then -- 1028
-		return -- 1029
+function GameUI.prototype.dragPoint(self, t, node) -- 1027
+	local wl = t.worldLocation -- 1028
+	if wl ~= nil then -- 1028
+		return Vec2(wl.x, wl.y) -- 1029
 	end -- 1029
-	local wp = self:dragPoint(t) -- 1030
-	if self.dragGhost then -- 1030
-		self.dragGhost.position = wp -- 1031
-	end -- 1031
-	local s = self.dragStart -- 1032
-	if s then -- 1032
-		local d = math.abs(wp.x - s.x) + math.abs(wp.y - s.y) -- 1034
-		if d - self.lastMoveLog >= 40 then -- 1034
-			self.lastMoveLog = d -- 1036
-			self:log("MOVE d=" .. tostring(math.floor(d + 0.5))) -- 1037
-		end -- 1037
-	end -- 1037
-end -- 1028
-function GameUI.prototype.endDrag(self, t) -- 1042
-	if not self.drag then -- 1042
+	if node then -- 1029
+		return node:convertToWorldSpace(t.location) -- 1030
+	end -- 1030
+	return Vec2(t.location.x, t.location.y) -- 1031
+end -- 1027
+function GameUI.prototype.beginDrag(self, kind, cardId, index, ____type, value, t) -- 1034
+	if self.drag then -- 1034
 		return -- 1043
 	end -- 1043
-	if Mouse.leftButtonPressed then -- 1043
-		self.dragEndedEarly = true -- 1046
-		self:log("END early (still pressed)") -- 1047
-		return -- 1048
-	end -- 1048
-	self:finalizeDrag(self:dragPoint(t)) -- 1050
-end -- 1042
-function GameUI.prototype.tick(self) -- 1054
-	if not self.drag or not self.dragEndedEarly then -- 1054
-		return -- 1055
-	end -- 1055
-	if Mouse.leftButtonPressed then -- 1055
-		local p = self:mouseDesignPoint() -- 1057
-		if self.dragGhost then -- 1057
-			self.dragGhost.position = p -- 1058
-		end -- 1058
-	else -- 1058
-		self:finalizeDrag(self:mouseDesignPoint()) -- 1060
-	end -- 1060
-end -- 1054
-function GameUI.prototype.mouseDesignPoint(self) -- 1065
-	local mouse = Mouse.position -- 1066
-	local visual = App.visualSize -- 1067
-	local view = View.size -- 1068
-	local z = self.viewZoom -- 1069
-	local vx = mouse.x * view.width / visual.width - view.width / 2 -- 1070
-	local vy = view.height / 2 - mouse.y * view.height / visual.height -- 1071
-	return Vec2(vx / z, vy / z) -- 1072
-end -- 1065
-function GameUI.prototype.finalizeDrag(self, p) -- 1075
-	local d = self.drag -- 1076
-	self.drag = nil -- 1077
-	self.dragEndedEarly = false -- 1078
-	self:hideGhost() -- 1079
-	local start = self.dragStart -- 1080
-	self.dragStart = nil -- 1081
-	if not d then -- 1081
-		return -- 1082
-	end -- 1082
-	local moved = start and math.abs(p.x - start.x) + math.abs(p.y - start.y) or 0 -- 1083
-	self:log("END moved=" .. tostring(math.floor(moved + 0.5))) -- 1084
-	if moved < 20 then -- 1084
-		return -- 1086
-	end -- 1086
-	if d.kind == "inventory" then -- 1086
-		local target = self:cardAtPoint(p) -- 1088
-		if target ~= nil then -- 1088
-			if self.mgr:placeCoinOnCard(target, d.type, d.value) then -- 1088
-				self:playCoinSound() -- 1090
-			end -- 1090
-			self.hintText = "" -- 1091
-		else -- 1091
-			self.hintText = "把硬币拖到某张卡牌上" -- 1093
-		end -- 1093
-		self:refresh() -- 1095
-	else -- 1095
-		local target = self:cardAtPoint(p) -- 1097
-		if target == nil then -- 1097
-			self.mgr:removePlacedCoin(d.cardId, d.index) -- 1099
-		elseif target ~= d.cardId then -- 1099
-			if self.mgr:movePlacedCoin(d.cardId, d.index, target) then -- 1099
-				self:playCoinSound() -- 1101
-			end -- 1101
-		end -- 1101
-		self:refresh() -- 1103
-	end -- 1103
-end -- 1075
-function GameUI.prototype.playCoinSound(self) -- 1108
-	self:playSfx("Audio/coin.wav") -- 1109
-end -- 1108
-function GameUI.prototype.playCardSound(self) -- 1113
-	self:playSfx("Audio/card_paper.wav") -- 1114
-end -- 1113
-function GameUI.prototype.playSfx(self, path) -- 1118
-	local s = AudioSource(path) -- 1119
-	if s then -- 1119
-		s.volume = self.sfxVolume -- 1121
-		s:addTo(self.fxLayer) -- 1122
-		s:play() -- 1123
-	end -- 1123
-end -- 1118
-function GameUI.prototype.cardAtPoint(self, p) -- 1127
-	do -- 1127
-		local i = 0 -- 1128
-		while i < #self.cardRects do -- 1128
-			local r = self.cardRects[i + 1] -- 1129
-			if p.x >= r.x - r.w / 2 and p.x <= r.x + r.w / 2 and p.y >= r.y - r.h / 2 and p.y <= r.y + r.h / 2 then -- 1129
-				return r.id -- 1132
-			end -- 1132
-			i = i + 1 -- 1128
-		end -- 1128
-	end -- 1128
-	return nil -- 1135
-end -- 1127
-function GameUI.prototype.makeGhost(self, ____type, value, pos) -- 1138
-	self:hideGhost() -- 1139
-	local node = Node() -- 1140
-	node.position = pos -- 1141
-	local d = DrawNode() -- 1142
-	d:drawDot( -- 1143
-		Vec2.zero, -- 1143
-		26, -- 1143
-		coinColor(____type) -- 1143
-	) -- 1143
-	d:drawDot(Vec2.zero, 20, C_BADGE) -- 1144
-	d:addTo(node) -- 1145
-	local l = Label("sarasa-mono-sc-regular", 20) -- 1146
-	if l then -- 1146
-		l.text = coinChipText(____type, value) -- 1147
-		l.position = Vec2.zero -- 1147
-		l.color = C_TEXT -- 1147
-		l:addTo(node) -- 1147
-	end -- 1147
-	node:addTo(self.fxLayer) -- 1148
-	self.dragGhost = node -- 1149
-end -- 1138
-function GameUI.prototype.hideGhost(self) -- 1152
-	if self.dragGhost then -- 1152
-		self.dragGhost:removeFromParent() -- 1153
-		self.dragGhost = nil -- 1153
-	end -- 1153
-end -- 1152
-function GameUI.prototype.doConfirm(self) -- 1156
-	if self.mgr.state.status ~= "playing" then -- 1156
-		return -- 1157
-	end -- 1157
-	if self.selectedCardId == nil then -- 1157
-		return -- 1158
-	end -- 1158
-	local res = self.mgr:confirmCard(self.selectedCardId) -- 1159
-	if res.ok then -- 1159
-		self.selectedCardId = nil -- 1161
-		self:playCardSound() -- 1162
-	end -- 1162
-	self:syncProgress() -- 1164
-	self:refresh() -- 1165
-end -- 1156
-function GameUI.prototype.doEndTurn(self) -- 1168
-	if self.mgr.state.status ~= "playing" then -- 1168
-		return -- 1169
-	end -- 1169
-	self.mgr:endTurn() -- 1170
-	self.selectedCardId = nil -- 1171
-	self:syncProgress() -- 1172
-	self:refresh() -- 1173
-end -- 1168
-function GameUI.prototype.opSymbol(self, op) -- 1176
-	if op == "sub" then -- 1176
-		return "−" -- 1177
-	end -- 1177
-	if op == "mul" then -- 1177
-		return "×" -- 1178
-	end -- 1178
-	if op == "div" then -- 1178
-		return "÷" -- 1179
-	end -- 1179
-	return "+" -- 1180
-end -- 1176
-return ____exports -- 1176
+	self.lastMoveLog = 0 -- 1044
+	self.dragEndedEarly = false -- 1045
+	self:log((((("BEGIN " .. kind) .. " val=") .. tostring(value)) .. " mouseDown=") .. tostring(Mouse.leftButtonPressed)) -- 1046
+	self.drag = { -- 1047
+		kind = kind, -- 1047
+		cardId = cardId, -- 1047
+		index = index, -- 1047
+		type = ____type, -- 1047
+		value = value -- 1047
+	} -- 1047
+	local wp = self:dragPoint(t) -- 1048
+	self.dragStart = wp -- 1049
+	self:makeGhost(____type, value, wp) -- 1050
+	self.hintText = "把硬币放到某张卡牌上" -- 1052
+	self:renderHud() -- 1053
+end -- 1034
+function GameUI.prototype.moveDrag(self, t) -- 1056
+	if not self.drag then -- 1056
+		return -- 1057
+	end -- 1057
+	local wp = self:dragPoint(t) -- 1058
+	if self.dragGhost then -- 1058
+		self.dragGhost.position = wp -- 1059
+	end -- 1059
+	local s = self.dragStart -- 1060
+	if s then -- 1060
+		local d = math.abs(wp.x - s.x) + math.abs(wp.y - s.y) -- 1062
+		if d - self.lastMoveLog >= 40 then -- 1062
+			self.lastMoveLog = d -- 1064
+			self:log("MOVE d=" .. tostring(math.floor(d + 0.5))) -- 1065
+		end -- 1065
+	end -- 1065
+end -- 1056
+function GameUI.prototype.endDrag(self, t) -- 1070
+	if not self.drag then -- 1070
+		return -- 1071
+	end -- 1071
+	if Mouse.leftButtonPressed then -- 1071
+		self.dragEndedEarly = true -- 1074
+		self:log("END early (still pressed)") -- 1075
+		return -- 1076
+	end -- 1076
+	self:finalizeDrag(self:dragPoint(t)) -- 1078
+end -- 1070
+function GameUI.prototype.tick(self) -- 1082
+	if not self.drag or not self.dragEndedEarly then -- 1082
+		return -- 1083
+	end -- 1083
+	if Mouse.leftButtonPressed then -- 1083
+		local p = self:mouseDesignPoint() -- 1085
+		if self.dragGhost then -- 1085
+			self.dragGhost.position = p -- 1086
+		end -- 1086
+	else -- 1086
+		self:finalizeDrag(self:mouseDesignPoint()) -- 1088
+	end -- 1088
+end -- 1082
+function GameUI.prototype.mouseDesignPoint(self) -- 1093
+	local mouse = Mouse.position -- 1094
+	local visual = App.visualSize -- 1095
+	local view = View.size -- 1096
+	local z = self.viewZoom -- 1097
+	local vx = mouse.x * view.width / visual.width - view.width / 2 -- 1098
+	local vy = view.height / 2 - mouse.y * view.height / visual.height -- 1099
+	return Vec2(vx / z, vy / z) -- 1100
+end -- 1093
+function GameUI.prototype.finalizeDrag(self, p) -- 1103
+	local d = self.drag -- 1104
+	self.drag = nil -- 1105
+	self.dragEndedEarly = false -- 1106
+	self:hideGhost() -- 1107
+	local start = self.dragStart -- 1108
+	self.dragStart = nil -- 1109
+	if not d then -- 1109
+		return -- 1110
+	end -- 1110
+	local moved = start and math.abs(p.x - start.x) + math.abs(p.y - start.y) or 0 -- 1111
+	self:log("END moved=" .. tostring(math.floor(moved + 0.5))) -- 1112
+	if moved < 20 then -- 1112
+		return -- 1114
+	end -- 1114
+	if d.kind == "inventory" then -- 1114
+		local target = self:cardAtPoint(p) -- 1116
+		if target ~= nil then -- 1116
+			if self.mgr:placeCoinOnCard(target, d.type, d.value) then -- 1116
+				self:playCoinSound() -- 1118
+			end -- 1118
+			self.hintText = "" -- 1119
+		else -- 1119
+			self.hintText = "把硬币拖到某张卡牌上" -- 1121
+		end -- 1121
+		self:refresh() -- 1123
+	else -- 1123
+		local target = self:cardAtPoint(p) -- 1125
+		if target == nil then -- 1125
+			self.mgr:removePlacedCoin(d.cardId, d.index) -- 1127
+		elseif target ~= d.cardId then -- 1127
+			if self.mgr:movePlacedCoin(d.cardId, d.index, target) then -- 1127
+				self:playCoinSound() -- 1129
+			end -- 1129
+		end -- 1129
+		self:refresh() -- 1131
+	end -- 1131
+end -- 1103
+function GameUI.prototype.playCoinSound(self) -- 1136
+	self:playSfx("Audio/coin.wav") -- 1137
+end -- 1136
+function GameUI.prototype.playCardSound(self) -- 1141
+	self:playSfx("Audio/card_paper.wav") -- 1142
+end -- 1141
+function GameUI.prototype.playSfx(self, path) -- 1146
+	local s = AudioSource(path) -- 1147
+	if s then -- 1147
+		s.volume = self.sfxVolume -- 1149
+		s:addTo(self.fxLayer) -- 1150
+		s:play() -- 1151
+	end -- 1151
+end -- 1146
+function GameUI.prototype.cardAtPoint(self, p) -- 1155
+	do -- 1155
+		local i = 0 -- 1156
+		while i < #self.cardRects do -- 1156
+			local r = self.cardRects[i + 1] -- 1157
+			if p.x >= r.x - r.w / 2 and p.x <= r.x + r.w / 2 and p.y >= r.y - r.h / 2 and p.y <= r.y + r.h / 2 then -- 1157
+				return r.id -- 1160
+			end -- 1160
+			i = i + 1 -- 1156
+		end -- 1156
+	end -- 1156
+	return nil -- 1163
+end -- 1155
+function GameUI.prototype.makeGhost(self, ____type, value, pos) -- 1166
+	self:hideGhost() -- 1167
+	local node = Node() -- 1168
+	node.position = pos -- 1169
+	local d = DrawNode() -- 1170
+	d:drawDot( -- 1171
+		Vec2.zero, -- 1171
+		26, -- 1171
+		coinColor(____type) -- 1171
+	) -- 1171
+	d:drawDot(Vec2.zero, 20, C_BADGE) -- 1172
+	d:addTo(node) -- 1173
+	local l = Label("sarasa-mono-sc-regular", 20) -- 1174
+	if l then -- 1174
+		l.text = coinChipText(____type, value) -- 1175
+		l.position = Vec2.zero -- 1175
+		l.color = C_TEXT -- 1175
+		l:addTo(node) -- 1175
+	end -- 1175
+	node:addTo(self.fxLayer) -- 1176
+	self.dragGhost = node -- 1177
+end -- 1166
+function GameUI.prototype.hideGhost(self) -- 1180
+	if self.dragGhost then -- 1180
+		self.dragGhost:removeFromParent() -- 1181
+		self.dragGhost = nil -- 1181
+	end -- 1181
+end -- 1180
+function GameUI.prototype.doConfirm(self) -- 1184
+	if self.mgr.state.status ~= "playing" then -- 1184
+		return -- 1185
+	end -- 1185
+	if self.selectedCardId == nil then -- 1185
+		return -- 1186
+	end -- 1186
+	local res = self.mgr:confirmCard(self.selectedCardId) -- 1187
+	if res.ok then -- 1187
+		self.selectedCardId = nil -- 1189
+		self:playCardSound() -- 1190
+	end -- 1190
+	self:syncProgress() -- 1192
+	self:refresh() -- 1193
+end -- 1184
+function GameUI.prototype.doEndTurn(self) -- 1196
+	if self.mgr.state.status ~= "playing" then -- 1196
+		return -- 1197
+	end -- 1197
+	self.mgr:endTurn() -- 1198
+	self.selectedCardId = nil -- 1199
+	self:syncProgress() -- 1200
+	self:refresh() -- 1201
+end -- 1196
+function GameUI.prototype.opSymbol(self, op) -- 1204
+	if op == "sub" then -- 1204
+		return "−" -- 1205
+	end -- 1205
+	if op == "mul" then -- 1205
+		return "×" -- 1206
+	end -- 1206
+	if op == "div" then -- 1206
+		return "÷" -- 1207
+	end -- 1207
+	return "+" -- 1208
+end -- 1204
+return ____exports -- 1204
